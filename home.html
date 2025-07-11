@@ -3,8 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Home - Xinn Lab</title>
+  <title>Home - Xinn Lab Social</title>
   <link rel="stylesheet" href="css/home.css" />
+  <style>
+    /* Optional quick inline styles for search and results */
+    #search-results div:hover {
+      background-color: #f0f0f0;
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar">
@@ -14,22 +20,54 @@
     <a href="login.html" class="nav-item logout-btn" id="logout-btn">🚪 Logout</a>
   </nav>
 
-  <div class="tab-content" id="feed-tab">
-    <div class="post-creator">
-      <textarea id="post-content" placeholder="What's on your mind?"></textarea>
-      <select id="visibility">
-        <option>🌐 Public</option>
-        <option>🔒 Only Me</option>
-      </select>
-      <button id="post-btn">Post</button>
+  <main style="max-width: 600px; margin: 20px auto;">
+    <!-- Search User Section -->
+    <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+      <input
+        type="text"
+        id="search-input"
+        placeholder="Search users by username..."
+        style="flex-grow: 1; padding: 8px; border-radius: 6px; border: 1px solid #ccc;"
+      />
+      <button
+        id="search-btn"
+        style="padding: 8px 12px; border-radius: 6px; background: #4267B2; color: white; border: none; cursor: pointer;"
+      >
+        Search
+      </button>
     </div>
-    <div id="feed" class="feed"></div>
-  </div>
+
+    <!-- Search results -->
+    <div id="search-results" style="margin-bottom: 30px;"></div>
+
+    <!-- Post Feed -->
+    <div id="feed"></div>
+
+    <!-- New Post Form -->
+    <div style="margin-top: 30px;">
+      <textarea id="post-content" placeholder="What's on your mind?" style="width: 100%; height: 80px; border-radius: 10px; padding: 10px;"></textarea>
+      <select id="visibility" style="margin-top: 10px; padding: 6px; border-radius: 6px;">
+        <option value="🌐 Public">🌐 Public</option>
+        <option value="🔒 Only Me">🔒 Only Me</option>
+      </select>
+      <button
+        onclick="createPost()"
+        style="margin-top: 10px; padding: 10px 20px; border-radius: 8px; background: #4267B2; color: white; border: none; cursor: pointer;"
+      >
+        Post
+      </button>
+    </div>
+  </main>
 
   <script src="js/home.js"></script>
   <script>
-    document.getElementById('post-btn').onclick = createPost;
-    document.getElementById('logout-btn').onclick = logout;
+    window.onload = function () {
+      loadPosts();
+      loadProfileInfoForPost();
+
+      document.getElementById("logout-btn").onclick = logout;
+      document.getElementById("search-btn").onclick = searchUsers;
+    };
   </script>
 </body>
 </html>
