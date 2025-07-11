@@ -1,24 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Xinn Lab</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="app">
-    <header>
-      <h1>Xinn Lab</h1>
-    </header>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+      <div class="nav-item active" onclick="showTab('feed')">🏠 Feed</div>
+      <div class="nav-item" onclick="showTab('profile')">👤 Profile</div>
+      <div class="nav-item" onclick="showTab('settings')">⚙️ Settings</div>
+    </nav>
 
-    <div class="post-creator">
-      <textarea placeholder="What's on your mind?"></textarea>
-      <button onclick="createPost()">Post</button>
+    <!-- Main Content -->
+    <div class="tab-content" id="feed-tab">
+      <div class="post-creator">
+        <textarea placeholder="What's on your mind?"></textarea>
+        <button onclick="createPost()">Post</button>
+      </div>
+      <div id="feed" class="feed">
+        <!-- Posts will appear here -->
+      </div>
     </div>
 
-    <div id="feed" class="feed">
-      <!-- Posts will appear here -->
+    <div class="tab-content hidden" id="profile-tab">
+      <h2>👤 My Profile</h2>
+      <p>This is your profile page.</p>
+    </div>
+
+    <div class="tab-content hidden" id="settings-tab">
+      <h2>⚙️ Settings</h2>
+      <p>Settings will be here.</p>
     </div>
   </div>
 
