@@ -1,183 +1,45 @@
-:root {
-  --bg-color: #f0f2f5;
-  --text-color: #000;
-  --card-color: #fff;
-  --nav-color: #fff;
-  --accent-color: #4267B2;
-}
-
-body.dark {
-  --bg-color: #18191a;
-  --text-color: #e4e6eb;
-  --card-color: #242526;
-  --nav-color: #3a3b3c;
-  --accent-color: #2e89ff;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: Arial, sans-serif;
-  background-color: var(--bg-color);
+/* Login Page */
+.login-page {
+  max-width: 400px;
+  margin: 100px auto;
+  padding: 30px;
+  background-color: var(--card-color);
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  text-align: center;
   color: var(--text-color);
 }
 
-.app {
-  max-width: 600px;
-  margin: auto;
-  padding-bottom: 70px;
+.login-page input {
+  width: 100%;
+  padding: 12px 10px;
+  margin: 10px 0;
+  font-size: 16px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
 }
 
-/* Navbar */
-.navbar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  background-color: var(--nav-color);
-  border-top: 1px solid #ccc;
-  justify-content: space-around;
-  padding: 10px 0;
-  z-index: 10;
-}
-
-.nav-item {
-  flex: 1;
-  text-align: center;
-  font-weight: bold;
-  color: #555;
+.login-page button {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 6px;
   cursor: pointer;
+  width: 100%;
 }
 
-.nav-item.active {
-  color: var(--accent-color);
-}
-
-/* Tabs */
-.tab-content {
-  padding: 20px;
+.error-msg {
+  color: red;
+  margin-top: 10px;
 }
 
 .hidden {
   display: none;
 }
 
-/* Post Creator */
-.post-creator {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-textarea {
-  resize: none;
-  padding: 10px;
-  font-size: 16px;
-  height: 80px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  background-color: var(--card-color);
-  color: var(--text-color);
-}
-
-select, button {
-  padding: 10px;
-  font-size: 16px;
-  border-radius: 8px;
-}
-
-button {
-  background-color: var(--accent-color);
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-/* Feed Post */
-.feed {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.post {
-  background-color: var(--card-color);
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.post-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.post-header > div {
-  flex: 1;
-  margin-left: 10px;
-}
-
-.avatar-sm {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-}
-
-.edit-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  color: var(--accent-color);
-}
-
-.post-actions {
-  margin-top: 10px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 16px;
-}
-
-.comment-box {
-  margin-top: 10px;
-  font-size: 14px;
-}
-
-/* Profile */
-.profile {
-  text-align: center;
-  margin-top: 20px;
-}
-
-.avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  margin-bottom: 10px;
-}
-
-/* Settings */
-.setting-item {
-  margin: 20px 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.setting-item select {
-  padding: 5px;
-}
-
-.about-text {
-  font-size: 14px;
-  margin-top: 5px;
-  line-height: 1.4;
+.logout-btn {
+  color: #d9534f;
+  font-weight: bold;
 }
