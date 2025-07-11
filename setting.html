@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Settings - Xinn Lab</title>
+  <link rel="stylesheet" href="css/settings.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <a href="home.html" class="nav-item">🏠 Feed</a>
+    <a href="profile.html" class="nav-item">👤 Profile</a>
+    <a href="settings.html" class="nav-item active">⚙️ Settings</a>
+    <a href="login.html" class="nav-item logout-btn" id="logout-btn">🚪 Logout</a>
+  </nav>
+
+  <div class="tab-content">
+    <h2>Settings</h2>
+
+    <div class="setting-item">
+      <label for="dark-toggle">🌙 Dark Mode</label>
+      <input type="checkbox" id="dark-toggle" />
+    </div>
+
+    <div class="setting-item">
+      <label for="language">🌐 Language</label>
+      <select id="language">
+        <option>English</option>
+        <option>မြန်မာ</option>
+        <option>Vietnamese</option>
+      </select>
+    </div>
+
+    <div class="setting-item">
+      <label>ℹ️ About</label>
+      <p class="about-text">Xinn Lab Social App UI v1.0<br />Created by Ko Aung</p>
+    </div>
+  </div>
+
+  <script src="js/settings.js"></script>
+  <script>
+    document.getElementById('dark-toggle').onchange = toggleDarkMode;
+    document.getElementById('logout-btn').onclick = logout;
+    window.onload = loadSettings;
+  </script>
+</body>
+</html>
