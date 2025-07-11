@@ -9,7 +9,7 @@
 <body>
   <div class="app">
 
-    <!-- Navigation Bar -->
+    <!-- Navigation -->
     <nav class="navbar">
       <div class="nav-item active" onclick="showTab('feed')">🏠 Feed</div>
       <div class="nav-item" onclick="showTab('profile')">👤 Profile</div>
@@ -28,22 +28,39 @@
     <!-- Profile Tab -->
     <div class="tab-content hidden" id="profile-tab">
       <div class="profile">
-        <img src="https://i.pravatar.cc/150?u=xinnlab" alt="Avatar" class="avatar" />
+        <img src="https://i.pravatar.cc/150?u=xinnlab" class="avatar" />
         <h2>Ko Aung</h2>
-        <p>Passionate developer building cool stuff with JS 🚀</p>
+        <p class="bio">🚀 Passionate Developer, Dreamer, Doer.</p>
+        <p><strong>🎂 Birthdate:</strong> 1998-12-03</p>
+        <p><strong>📧 Email:</strong> koaung@xinnlab.com</p>
       </div>
     </div>
 
     <!-- Settings Tab -->
     <div class="tab-content hidden" id="settings-tab">
       <h2>⚙️ Settings</h2>
+
       <div class="setting-item">
         <label for="dark-toggle">🌙 Dark Mode</label>
         <input type="checkbox" id="dark-toggle" onchange="toggleDarkMode()" />
       </div>
-    </div>
-  </div>
 
+      <div class="setting-item">
+        <label for="language">🌐 Language</label>
+        <select id="language">
+          <option>English</option>
+          <option>မြန်မာ</option>
+          <option>Vietnamese</option>
+        </select>
+      </div>
+
+      <div class="setting-item">
+        <label>ℹ️ About</label>
+        <p class="about-text">Xinn Lab Social App UI Prototype v1.0<br/>Created by Ko Aung</p>
+      </div>
+    </div>
+
+  </div>
   <script src="script.js"></script>
 </body>
 </html>
