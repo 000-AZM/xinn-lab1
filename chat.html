@@ -1,90 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Chat</title>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <meta charset="UTF‑8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat – Xinn Social</title>
+  <!-- Firebase & shared -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase‑app‑compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase‑auth‑compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase‑firestore‑compat.js"></script>
   <script src="js/firebase-config.js"></script>
-  <style>#msgs{border:1px solid #ccc;height:300px;overflow:auto;padding:10px;margin:1rem 0}input{width:80%;}button{width:18%}</style>
+  <script src="js/update.js"></script>
+  <script src="js/auth.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; }
+    nav { background: #fff; padding: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    nav a { margin-right: 10px; text-decoration: none; color: #333; }
+    .container { max-width: 600px; margin: 20px auto; background: white; padding: 20px; border-radius: 8px; }
+    select { width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 4px; }
+    #chat-box { border: 1px solid #ccc; height: 300px; overflow-y: auto; padding: 10px; background: #fafafa; border-radius: 4px; }
+    .msg { padding: 8px 12px; margin: 5px 0; border-radius: 12px; max-width: 70%; }
+    .me { background: #d1e7dd; align-self: flex-end; margin-left: auto; }
+    .them { background: #f1f1f1; align-self: flex-start; margin-right: auto; }
+    #input-area { display: flex; margin-top: 10px; gap: 8px; }
+    #message-input { flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
+    #send-btn { padding: 8px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    #send-btn:hover { background: #357abd; }
+  </style>
 </head>
 <body>
   <nav>
-    <a href="profile.html">Profile</a>|
-    <a href="search.html">Search</a>|
-    <a href="chat.html">Chat</a>|
-    <a href="settings.html">Settings</a>|
+    <a href="profile.html">Profile</a>
+    <a href="chat.html">Chat</a>
+    <a href="search.html">Search</a>
+    <a href="post.html">Posts</a>
+    <a href="notifications.html">Notifications</a>
+    <a href="settings.html">Settings</a>
     <a href="#" id="logout">Logout</a>
   </nav>
-  <h2>Chat (enter friend's UID below)</h2>
-  <input id="fid" placeholder="Friend User ID" /><button id="start">Start</button>
-  <div id="msgs"></div>
-  <input id="txt" placeholder="Type message" /><button id="send">Send</button>
+
+  <div class="container">
+    <h2>Chat with Friend</h2>
+    <select id="friend-select"><option value="">— Select Friend —</option></select>
+    <div id="chat-box"></div>
+    <div id="input-area">
+      <input id="message-input" placeholder="Enter message..." />
+      <button id="send-btn">Send</button>
+    </div>
+  </div>
+
   <script>
+    (async () => {
+      if (!(await checkSystemUpdate())) return;
+      redirectIfNotLoggedIn();
+      document.getElementById("logout").onclick = logout;
 
-// Example: Check "systemUpdate" flag in Firestore 'config' doc
-const db = firebase.firestore();
+      const user = firebase.auth().currentUser;
+      const uid = user.uid;
+      const db = firebase.firestore();
 
-async function checkSystemUpdate() {
-  try {
-    const doc = await db.collection("config").doc("systemStatus").get();
-    if (!doc.exists) {
-      console.log("No config document, continuing normally");
-      return true;
-    }
-
-    const data = doc.data();
-    if (data.updating === 1) {
-      alert("⚠️ System is currently updating. Please try again later.");
-      // Optionally disable UI here, or redirect
-      document.body.innerHTML = "<h2 style='text-align:center; margin-top:2rem;'>System is updating. Please check back later.</h2>";
-      return false;
-    }
-    return true;
-  } catch (err) {
-    console.error("Failed to check system update:", err);
-    return true; // fail safe - allow usage if error checking
-  }
-}
-
-// Call this on page load before app logic
-checkSystemUpdate().then(allowed => {
-  if (!allowed) {
-    // Optionally stop further JS execution here
-  } else {
-    // Continue normal app initialization here
-  }
-});
-
-
-
-    document.getElementById('logout').onclick = ()=> auth.signOut().then(()=>location.href='login.html');
-    let unsub, cid;
-    auth.onAuthStateChanged(u=>{ if(!u) location.href='login.html'; });
-    function gen(a,b){return a<b?a+'_'+b:b+'_'+a;}
-    document.getElementById('start').onclick = ()=>{
-      const fid = fid.value.trim();
-      const me = auth.currentUser;
-      if(!fid||!me) return alert('Enter friend ID');
-      cid = gen(me.uid,fid);
-      if(unsub) unsub();
-      unsub = db.collection('chats').doc(cid).collection('messages').orderBy('timestamp').onSnapshot(s=>{
-        msgs.innerHTML='';
-        s.forEach(d=>{ const m=d.data(); const div=document.createElement('div');
-          div.textContent=(m.sender===me.uid?'Me':'Friend')+': '+m.text;
-          msgs.append(div);
-        });
-        msgs.scrollTop=msgs.scrollHeight;
+      const userDoc = await db.collection("users").doc(uid).get();
+      const friends = userDoc.data().friends || [];
+      const select = document.getElementById("friend-select");
+      friends.forEach(async fid => {
+        const fd = await db.collection("users").doc(fid).get();
+        const opt = document.createElement("option");
+        opt.value = fid;
+        opt.textContent = fd.data().username;
+        select.appendChild(opt);
       });
-    }
-    send.onclick = ()=>{
-      const me = auth.currentUser;
-      if(!me||!cid) return alert('Start a chat first');
-      const t= txt.value.trim(); if(!t) return;
-      db.collection('chats').doc(cid).collection('messages').add({sender:me.uid,text:t,timestamp:firebase.firestore.FieldValue.serverTimestamp()});
-      txt.value='';
-    }
+
+      let unsubscribe;
+      let currentFriend;
+
+      select.onchange = () => {
+        currentFriend = select.value;
+        if (unsubscribe) unsubscribe();
+        if (!currentFriend) {
+          document.getElementById("chat-box").innerHTML = "";
+          return;
+        }
+        const chatId = uid < currentFriend ? uid + "_" + currentFriend : currentFriend + "_" + uid;
+        unsubscribe = db.collection("chats").doc(chatId).collection("messages").orderBy("timestamp")
+          .onSnapshot(snapshot => {
+            const cb = document.getElementById("chat-box");
+            cb.innerHTML = "";
+            snapshot.forEach(doc => {
+              const m = doc.data();
+              const d = document.createElement("div");
+              d.className = "msg " + (m.sender === uid ? "me" : "them");
+              d.innerHTML = `<small>${m.sender === uid ? "Me" : "Friend"} &bull; ${new Date(m.timestamp?.toDate()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</small><br>${m.text}`;
+              cb.appendChild(d);
+            });
+            cb.scrollTop = cb.scrollHeight;
+          });
+      };
+
+      document.getElementById("send-btn").onclick = async () => {
+        const text = document.getElementById("message-input").value.trim();
+        if (!text || !currentFriend) return;
+        const chatId = uid < currentFriend ? uid + "_" + currentFriend : currentFriend + "_" + uid;
+        await db.collection("chats").doc(chatId).collection("messages").add({
+          sender: uid,
+          text,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        document.getElementById("message-input").value = "";
+      };
+
+    })();
   </script>
 </body>
 </html>
