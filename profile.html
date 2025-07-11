@@ -1,27 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF‑8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profile – Xinn Social</title>
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <!-- Config and shared logic -->
+  <!-- Firebase & shared files -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase‑app‑compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase‑auth‑compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase‑firestore‑compat.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/update.js"></script>
   <script src="js/auth.js"></script>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; }
-    nav { background: #fff; padding: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    body { font-family: sans-serif; background: #f0f2f5; margin: 0; }
+    nav { background: white; padding: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     nav a { margin-right: 15px; text-decoration: none; color: #333; }
-    .container { max-width: 800px; margin: 30px auto; background: #fff; padding: 2rem; border-radius: 10px; }
-    .avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid #4a90e2; }
-    input, textarea, button { width: 100%; padding: 0.8rem; margin: 0.5rem 0; border-radius: 5px; border: 1px solid #ccc; }
-    button { background: #4a90e2; color: white; cursor: pointer; border: none; }
+    .container { max-width: 600px; background: white; margin: 30px auto; padding: 20px; border-radius: 8px; }
+    .profile-header { display: flex; align-items: center; gap: 20px; }
+    .avatar { width: 80px; height: 80px; border-radius: 50%; border: 2px solid #4a90e2; object-fit: cover; }
+    input, textarea, button { width: 100%; margin-top: 10px; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 1rem; }
+    button { background: #4a90e2; color: white; border: none; cursor: pointer; }
     button:hover { background: #357abd; }
-    .friends { margin-top: 2rem; }
-    .friend-item { background: #f9f9f9; padding: 10px; border-radius: 6px; margin-bottom: 8px; }
+    .friends-list { margin-top: 20px; }
+    .friend-item { background: #fafafa; padding: 10px; border-radius: 4px; margin-bottom: 6px; }
   </style>
 </head>
 <body>
@@ -30,51 +31,56 @@
     <a href="chat.html">Chat</a>
     <a href="search.html">Search</a>
     <a href="post.html">Posts</a>
-    <a href="settings.html">Settings</a>
     <a href="notifications.html">Notifications</a>
+    <a href="settings.html">Settings</a>
     <a href="#" id="logout">Logout</a>
   </nav>
+
   <div class="container">
-    <h2>Your Profile</h2>
-    <img id="avatar" class="avatar" src="https://via.placeholder.com/100" alt="Your avatar" />
-    <input type="text" id="avatar-url" placeholder="Avatar image URL" />
-    <input type="text" id="username" placeholder="Username" />
-    <textarea id="bio" placeholder="Your bio..."></textarea>
-    <input type="date" id="birth" placeholder="Birthdate" />
+    <h2>My Profile</h2>
+    <div class="profile-header">
+      <img id="avatar-img" class="avatar" src="https://via.placeholder.com/80" alt="Avatar">
+      <input id="avatar-url" placeholder="Avatar URL">
+    </div>
+    <input id="username" placeholder="Username">
+    <textarea id="bio" rows="3" placeholder="Bio"></textarea>
+    <input id="birth" type="date">
     <button id="save-btn">Save Profile</button>
-    <p id="msg"></p>
-    <div class="friends">
-      <h3>Friends</h3>
+    <p id="msg" style="font-weight: 600;"></p>
+
+    <div class="friends-list">
+      <h3>My Friends</h3>
       <div id="friend-list"></div>
     </div>
   </div>
 
   <script>
     (async () => {
-      if (! (await checkSystemUpdate())) return;
+      if (!(await checkSystemUpdate())) return;
       redirectIfNotLoggedIn();
       document.getElementById("logout").onclick = logout;
 
-      const authUser = firebase.auth().currentUser;
-      const uid = authUser.uid;
-      const userRef = firebase.firestore().collection("users").doc(uid);
-      
-      const doc = await userRef.get();
-      if (!doc.exists) { alert("Profile data missing"); return; }
-      const data = doc.data();
-      document.getElementById("avatar").src = data.avatar || "https://via.placeholder.com/100";
+      const user = firebase.auth().currentUser;
+      if (!user) return;
+      const uid = user.uid;
+      const ref = firebase.firestore().collection("users").doc(uid);
+      const doc = await ref.get();
+      const data = doc.data() || {};
+
+      document.getElementById("avatar-img").src = data.avatar || "https://via.placeholder.com/80";
       document.getElementById("avatar-url").value = data.avatar || "";
       document.getElementById("username").value = data.username || "";
       document.getElementById("bio").value = data.bio || "";
       document.getElementById("birth").value = data.birth || "";
 
-      const flist = document.getElementById("friend-list");
+      const friendList = document.getElementById("friend-list");
+      friendList.innerHTML = "";
       (data.friends || []).forEach(async fid => {
         const fdoc = await firebase.firestore().collection("users").doc(fid).get();
         const div = document.createElement("div");
         div.className = "friend-item";
-        div.textContent = fdoc.data().username || "Friend";
-        flist.appendChild(div);
+        div.textContent = fdoc.data()?.username || "Friend";
+        friendList.appendChild(div);
       });
 
       document.getElementById("save-btn").onclick = async () => {
@@ -85,13 +91,13 @@
           birth: document.getElementById("birth").value
         };
         try {
-          await userRef.update(updates);
+          await ref.update(updates);
           document.getElementById("msg").style.color = "green";
-          document.getElementById("msg").textContent = "Profile updated.";
-          document.getElementById("avatar").src = updates.avatar || "https://via.placeholder.com/100";
+          document.getElementById("msg").textContent = "Profile updated!";
+          document.getElementById("avatar-img").src = updates.avatar || "https://via.placeholder.com/80";
         } catch (e) {
           document.getElementById("msg").style.color = "red";
-          document.getElementById("msg").textContent = e.message;
+          document.getElementById("msg").textContent = "Error updating: " + e.message;
         }
       };
     })();
