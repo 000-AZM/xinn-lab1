@@ -2,12 +2,24 @@ function createPost() {
   const textarea = document.querySelector("textarea");
   const feed = document.getElementById("feed");
   const content = textarea.value.trim();
+  const visibility = document.getElementById("visibility").value;
+
   if (!content) return;
+
+  const time = new Date().toLocaleString();
 
   const post = document.createElement("div");
   post.className = "post";
 
   post.innerHTML = `
+    <div class="post-header">
+      <img src="https://i.pravatar.cc/50?u=koaung" class="avatar-sm" />
+      <div>
+        <strong>Ko Aung</strong><br/>
+        <small>${time} • ${visibility}</small>
+      </div>
+      <button class="edit-btn" onclick="editPost(this)">✏️</button>
+    </div>
     <div class="post-text">${content}</div>
     <div class="post-actions">
       <span onclick="likePost(this)">❤️ <span class="like-count">0</span></span>
@@ -43,6 +55,15 @@ function sharePost(text) {
     });
   } else {
     alert("Share not supported on this browser.");
+  }
+}
+
+function editPost(btn) {
+  const postText = btn.closest(".post").querySelector(".post-text");
+  const oldText = postText.innerText;
+  const newText = prompt("Edit your post:", oldText);
+  if (newText !== null && newText.trim() !== "") {
+    postText.innerText = newText.trim();
   }
 }
 
