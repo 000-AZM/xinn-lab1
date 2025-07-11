@@ -1,70 +1,204 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Xinn Lab</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="app">
+:root {
+  --bg-color: #f0f2f5;
+  --text-color: #000;
+  --card-color: #fff;
+  --nav-color: #fff;
+  --accent-color: #4267B2;
+}
 
-    <!-- Navigation -->
-    <nav class="navbar">
-      <div class="nav-item active" onclick="showTab('feed')">🏠 Feed</div>
-      <div class="nav-item" onclick="showTab('profile')">👤 Profile</div>
-      <div class="nav-item" onclick="showTab('settings')">⚙️ Settings</div>
-    </nav>
+body.dark {
+  --bg-color: #18191a;
+  --text-color: #e4e6eb;
+  --card-color: #242526;
+  --nav-color: #3a3b3c;
+  --accent-color: #2e89ff;
+}
 
-    <!-- Feed Tab -->
-    <div class="tab-content" id="feed-tab">
-      <div class="post-creator">
-        <textarea placeholder="What's on your mind?"></textarea>
-        <select id="visibility">
-          <option>🌐 Public</option>
-          <option>🔒 Only Me</option>
-        </select>
-        <button onclick="createPost()">Post</button>
-      </div>
-      <div id="feed" class="feed"></div>
-    </div>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-    <!-- Profile Tab -->
-    <div class="tab-content hidden" id="profile-tab">
-      <div class="profile">
-        <img src="https://i.pravatar.cc/150?u=xinnlab" class="avatar" />
-        <h2>Ko Aung</h2>
-        <p class="bio">🚀 Passionate Developer, Dreamer, Doer.</p>
-        <p><strong>🎂 Birthdate:</strong> 1998-12-03</p>
-        <p><strong>📧 Email:</strong> koaung@xinnlab.com</p>
-      </div>
-    </div>
+body {
+  font-family: Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
 
-    <!-- Settings Tab -->
-    <div class="tab-content hidden" id="settings-tab">
-      <h2>⚙️ Settings</h2>
+.app {
+  max-width: 600px;
+  margin: auto;
+  padding-bottom: 70px;
+}
 
-      <div class="setting-item">
-        <label for="dark-toggle">🌙 Dark Mode</label>
-        <input type="checkbox" id="dark-toggle" onchange="toggleDarkMode()" />
-      </div>
+/* Navbar */
+.navbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  background-color: var(--nav-color);
+  border-top: 1px solid #ccc;
+  justify-content: space-around;
+  padding: 10px 0;
+  z-index: 10;
+}
 
-      <div class="setting-item">
-        <label for="language">🌐 Language</label>
-        <select id="language">
-          <option>English</option>
-          <option>မြန်မာ</option>
-          <option>Vietnamese</option>
-        </select>
-      </div>
+.nav-item {
+  flex: 1;
+  text-align: center;
+  font-weight: bold;
+  color: #555;
+  cursor: pointer;
+}
 
-      <div class="setting-item">
-        <label>ℹ️ About</label>
-        <p class="about-text">Xinn Lab Social App UI v1.0<br/>Created by Ko Aung</p>
-      </div>
-    </div>
+.nav-item.active {
+  color: var(--accent-color);
+}
 
-  </div>
-  <script src="script.js"></script>
-</body>
-</html>
+/* Tabs */
+.tab-content {
+  padding: 20px;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Post Creator */
+.post-creator {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+textarea {
+  resize: none;
+  padding: 10px;
+  font-size: 16px;
+  height: 80px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background-color: var(--card-color);
+  color: var(--text-color);
+}
+
+select,
+button {
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 8px;
+}
+
+button {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+/* Feed Post */
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.post {
+  background-color: var(--card-color);
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 15px;
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.avatar-sm {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.post-user-info {
+  flex: 1;
+  margin-left: 10px;
+  line-height: 1.2;
+  font-size: 14px;
+}
+
+.post-user-info strong {
+  font-size: 16px;
+}
+
+.edit-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--accent-color);
+}
+
+.post-text {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.post-actions {
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.post-actions span:hover {
+  color: var(--accent-color);
+}
+
+.comment-box input {
+  width: 100%;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+/* Profile */
+.profile {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+}
+
+/* Settings */
+.setting-item {
+  margin: 20px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.setting-item select {
+  padding: 5px;
+}
+
+.about-text {
+  font-size: 14px;
+  margin-top: 5px;
+  line-height: 1.4;
+}
