@@ -1,95 +1,53 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Chat - Xinn Lab</title>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chat</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js"></script>
-  <style>
-    #chat-messages { border:1px solid #ccc; height:300px; overflow:auto; padding:10px; }
-    #chat-input { width:80%; }
-    #send-btn { width:18%; }
-  </style>
+  <style>#msgs{border:1px solid #ccc;height:300px;overflow:auto;padding:10px;margin:1rem 0}input{width:80%;}button{width:18%}</style>
 </head>
 <body>
   <nav>
-    <a href="profile.html">Profile</a> |
-    <a href="search.html">Search</a> |
-    <a href="chat.html">Chat</a> |
-    <a href="settings.html">Settings</a> |
-    <a href="#" id="logout-btn">Logout</a>
+    <a href="profile.html">Profile</a>|
+    <a href="search.html">Search</a>|
+    <a href="chat.html">Chat</a>|
+    <a href="settings.html">Settings</a>|
+    <a href="#" id="logout">Logout</a>
   </nav>
-
-  <h1>Chat</h1>
-  <p>
-    Chat with user ID: <input type="text" id="chat-user-id" placeholder="Enter friend user ID" />
-    <button id="start-chat">Start Chat</button>
-  </p>
-  <div id="chat-messages"></div>
-  <input id="chat-input" placeholder="Type a message..." />
-  <button id="send-btn">Send</button>
-
+  <h2>Chat (enter friend's UID below)</h2>
+  <input id="fid" placeholder="Friend User ID" /><button id="start">Start</button>
+  <div id="msgs"></div>
+  <input id="txt" placeholder="Type message" /><button id="send">Send</button>
   <script>
-    const logoutBtn = document.getElementById('logout-btn');
-    logoutBtn.onclick = () => auth.signOut().then(() => window.location.href = 'login.html');
-
-    let currentChatId = null;
-    let unsubscribe = null;
-
-    auth.onAuthStateChanged(user => {
-      if (!user) window.location.href = 'login.html';
-    });
-
-    function generateChatId(uid1, uid2) {
-      return uid1 < uid2 ? uid1 + '_' + uid2 : uid2 + '_' + uid1;
-    }
-
-    document.getElementById('start-chat').onclick = () => {
-      const friendId = document.getElementById('chat-user-id').value.trim();
-      const user = auth.currentUser;
-      if (!user) return;
-
-      if (unsubscribe) unsubscribe(); // unsubscribe previous listener
-
-      currentChatId = generateChatId(user.uid, friendId);
-
-      const messagesDiv = document.getElementById('chat-messages');
-      messagesDiv.innerHTML = 'Loading messages...';
-
-      unsubscribe = db.collection('chats').doc(currentChatId)
-        .collection('messages')
-        .orderBy('timestamp')
-        .onSnapshot(snapshot => {
-          messagesDiv.innerHTML = '';
-          snapshot.forEach(doc => {
-            const msg = doc.data();
-            const msgDiv = document.createElement('div');
-            msgDiv.textContent = (msg.sender === user.uid ? 'Me: ' : 'Friend: ') + msg.text;
-            messagesDiv.appendChild(msgDiv);
-          });
-          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    document.getElementById('logout').onclick = ()=> auth.signOut().then(()=>location.href='login.html');
+    let unsub, cid;
+    auth.onAuthStateChanged(u=>{ if(!u) location.href='login.html'; });
+    function gen(a,b){return a<b?a+'_'+b:b+'_'+a;}
+    document.getElementById('start').onclick = ()=>{
+      const fid = fid.value.trim();
+      const me = auth.currentUser;
+      if(!fid||!me) return alert('Enter friend ID');
+      cid = gen(me.uid,fid);
+      if(unsub) unsub();
+      unsub = db.collection('chats').doc(cid).collection('messages').orderBy('timestamp').onSnapshot(s=>{
+        msgs.innerHTML='';
+        s.forEach(d=>{ const m=d.data(); const div=document.createElement('div');
+          div.textContent=(m.sender===me.uid?'Me':'Friend')+': '+m.text;
+          msgs.append(div);
         });
-    };
-
-    document.getElementById('send-btn').onclick = () => {
-      const user = auth.currentUser;
-      if (!user || !currentChatId) {
-        alert('Start a chat first!');
-        return;
-      }
-      const input = document.getElementById('chat-input');
-      const text = input.value.trim();
-      if (!text) return;
-
-      db.collection('chats').doc(currentChatId).collection('messages').add({
-        sender: user.uid,
-        text,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        msgs.scrollTop=msgs.scrollHeight;
       });
-
-      input.value = '';
-    };
+    }
+    send.onclick = ()=>{
+      const me = auth.currentUser;
+      if(!me||!cid) return alert('Start a chat first');
+      const t= txt.value.trim(); if(!t) return;
+      db.collection('chats').doc(cid).collection('messages').add({sender:me.uid,text:t,timestamp:firebase.firestore.FieldValue.serverTimestamp()});
+      txt.value='';
+    }
   </script>
 </body>
 </html>
