@@ -1,75 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login - Xinn Social</title>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="js/firebase-config.js"></script>
-
-  <style>
-    body {
-      margin: 0; font-family: 'Segoe UI', sans-serif; background: #f7f8fc;
-      display: flex; align-items: center; justify-content: center; height: 100vh;
-    }
-    .card {
-      background: white; padding: 2rem; border-radius: 10px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.08); width: 350px;
-    }
-    h2 { text-align: center; margin-bottom: 1rem; color: #333; }
-    input {
-      width: 100%; padding: 0.75rem; margin: 0.5rem 0;
-      border: 1px solid #ccc; border-radius: 5px; font-size: 1rem;
-    }
-    button {
-      width: 100%; padding: 0.75rem; background: #4a90e2; color: white;
-      border: none; font-size: 1rem; border-radius: 5px; cursor: pointer;
-    }
-    button:hover { background: #3b7dc0; }
-    .msg { margin-top: 1rem; text-align: center; font-weight: 600; }
-    .link { text-align: center; margin-top: 1rem; font-size: 0.9rem; }
-    .link a { color: #4a90e2; text-decoration: none; }
-    .link a:hover { text-decoration: underline; }
-  </style>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Login</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/update.js"></script>
+<style>
+body { font-family: Arial; background: #f4f6f9; display: flex; align-items: center; justify-content: center; height: 100vh; }
+.box { background: white; padding: 30px; border-radius: 8px; width: 300px; text-align: center; }
+input { width:100%; margin:10px 0; padding:10px; }
+button { width:100%; padding:10px; background:#4a90e2; color:white; border:none; border-radius:4px; cursor:pointer; }
+a { display:block; margin-top:10px; color:#555; font-size:0.9em; }
+</style>
 </head>
 <body>
-  <div class="card">
-    <h2>Welcome Back</h2>
-    <form id="login-form">
-      <input type="email" id="email" placeholder="Email" required />
-      <input type="password" id="password" placeholder="Password" required minlength="6" />
-      <button type="submit">Log In</button>
-    </form>
-    <p class="msg" id="login-msg"></p>
-    <div class="link">Don't have an account? <a href="register.html">Register</a></div>
-  </div>
-
-  <script>
-    const msg = document.getElementById("login-msg");
-    document.getElementById("login-form").addEventListener("submit", async e => {
-      e.preventDefault();
-      msg.textContent = "";
-      const email = document.getElementById("email").value.trim();
-      const pass = document.getElementById("password").value;
-      try {
-        await firebase.auth().signInWithEmailAndPassword(email, pass);
-        msg.style.color = "green";
-        msg.textContent = "Login successful. Redirecting...";
-        setTimeout(() => (location.href = "profile.html"), 1500);
-      } catch (err) {
-        msg.style.color = "red";
-        msg.textContent = err.message;
-      }
-    });
-
-    // Auto redirect if already logged in
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) location.href = "profile.html";
-    });
-  </script>
-</body>
-</html>
+<div class="box">
+  <h2>Login</h2>
+  <input id="email" placeholder="Email (user@xinn.lab)" type="email">
+  <input id="pass" placeholder="Password" type="password">
+  <button id="login-btn">Log In</button>
+  <a href="register.html">Register</a>
+</div>
+<script>
+(async()=>{
+  if(!(await checkSystemUpdate())) return;
+  document.getElementById("login-btn").onclick = async()=>{
+    const e = document.getElementById("email").value.trim();
+    const p = document.getElementById("pass").value;
+    if(!e.endsWith("@xinn.lab")) return alert("Email must end @xinn.lab");
+    try {
+      await firebase.auth().signInWithEmailAndPassword(e,p);
+      location.href = "profile.html";
+    } catch (err) { alert(err.message); }
+  };
+  firebase.auth().onAuthStateChanged(u=>{
+    if(u) location.href = "profile.html";
+  });
+})();
+</script>
+</body></html>
