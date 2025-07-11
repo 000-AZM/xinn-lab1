@@ -8,6 +8,7 @@
 </head>
 <body>
   <div class="app">
+
     <!-- Navigation Bar -->
     <nav class="navbar">
       <div class="nav-item active" onclick="showTab('feed')">🏠 Feed</div>
@@ -15,25 +16,31 @@
       <div class="nav-item" onclick="showTab('settings')">⚙️ Settings</div>
     </nav>
 
-    <!-- Main Content -->
+    <!-- Feed Tab -->
     <div class="tab-content" id="feed-tab">
       <div class="post-creator">
         <textarea placeholder="What's on your mind?"></textarea>
         <button onclick="createPost()">Post</button>
       </div>
-      <div id="feed" class="feed">
-        <!-- Posts will appear here -->
+      <div id="feed" class="feed"></div>
+    </div>
+
+    <!-- Profile Tab -->
+    <div class="tab-content hidden" id="profile-tab">
+      <div class="profile">
+        <img src="https://i.pravatar.cc/150?u=xinnlab" alt="Avatar" class="avatar" />
+        <h2>Ko Aung</h2>
+        <p>Passionate developer building cool stuff with JS 🚀</p>
       </div>
     </div>
 
-    <div class="tab-content hidden" id="profile-tab">
-      <h2>👤 My Profile</h2>
-      <p>This is your profile page.</p>
-    </div>
-
+    <!-- Settings Tab -->
     <div class="tab-content hidden" id="settings-tab">
       <h2>⚙️ Settings</h2>
-      <p>Settings will be here.</p>
+      <div class="setting-item">
+        <label for="dark-toggle">🌙 Dark Mode</label>
+        <input type="checkbox" id="dark-toggle" onchange="toggleDarkMode()" />
+      </div>
     </div>
   </div>
 
