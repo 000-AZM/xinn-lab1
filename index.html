@@ -1,86 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Xinn Lab Redirect</title>
+  <script>
+    window.onload = function() {
+      const user = localStorage.getItem('xinnlab_logged_in_user');
+      if(user) {
+        window.location.href = 'home.html';
+      } else {
+        window.location.href = 'login.html';
+      }
+    }
+  </script>
+</head>
 <body>
-
-  <!-- Login Page -->
-  <div id="login-page" class="auth-page">
-    <h2>Login</h2>
-    <input type="text" id="login-username" placeholder="Username" />
-    <input type="password" id="login-password" placeholder="Password" />
-    <button onclick="login()">Login</button>
-    <p id="login-error" class="error-msg"></p>
-    <p>Don't have an account? <a href="#" onclick="showRegister()">Register here</a></p>
-  </div>
-
-  <!-- Register Page -->
-  <div id="register-page" class="auth-page hidden">
-    <h2>Register</h2>
-    <input type="text" id="register-username" placeholder="Username" />
-    <input type="password" id="register-password" placeholder="Password" />
-    <input type="password" id="register-confirm-password" placeholder="Confirm Password" />
-    <button onclick="register()">Register</button>
-    <p id="register-error" class="error-msg"></p>
-    <p>Already have an account? <a href="#" onclick="showLogin()">Login here</a></p>
-  </div>
-
-  <!-- Main App -->
-  <div class="app hidden" id="app">
-
-    <!-- Navigation with Logout -->
-    <nav class="navbar">
-      <div class="nav-item active" onclick="showTab('feed')">🏠 Feed</div>
-      <div class="nav-item" onclick="showTab('profile')">👤 Profile</div>
-      <div class="nav-item" onclick="showTab('settings')">⚙️ Settings</div>
-      <div class="nav-item logout-btn" onclick="logout()">🚪 Logout</div>
-    </nav>
-
-    <!-- Feed Tab -->
-    <div class="tab-content" id="feed-tab">
-      <div class="post-creator">
-        <textarea placeholder="What's on your mind?"></textarea>
-        <select id="visibility">
-          <option>🌐 Public</option>
-          <option>🔒 Only Me</option>
-        </select>
-        <button onclick="createPost()">Post</button>
-      </div>
-      <div id="feed" class="feed"></div>
-    </div>
-
-    <!-- Profile Tab -->
-    <div class="tab-content hidden" id="profile-tab">
-      <div class="profile">
-        <img id="profile-avatar" src="" alt="Avatar" class="avatar" />
-        <h2 id="profile-username"></h2>
-        <p class="bio" id="profile-bio"></p>
-        <p><strong>🎂 Birthdate:</strong> <span id="profile-birth"></span></p>
-        <p><strong>📧 Email:</strong> <span id="profile-email"></span></p>
-      </div>
-    </div>
-
-    <!-- Settings Tab -->
-    <div class="tab-content hidden" id="settings-tab">
-      <h2>⚙️ Settings</h2>
-
-      <div class="setting-item">
-        <label for="dark-toggle">🌙 Dark Mode</label>
-        <input type="checkbox" id="dark-toggle" onchange="toggleDarkMode()" />
-      </div>
-
-      <div class="setting-item">
-        <label for="language">🌐 Language</label>
-        <select id="language">
-          <option>English</option>
-          <option>မြန်မာ</option>
-          <option>Vietnamese</option>
-        </select>
-      </div>
-
-      <div class="setting-item">
-        <label>ℹ️ About</label>
-        <p class="about-text">Xinn Lab Social App UI v1.0<br />Created by Ko Aung</p>
-      </div>
-    </div>
-
-  </div>
-
-<script src="script.js"></script>
+  Redirecting...
 </body>
+</html>
