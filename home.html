@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home - Xinn Lab</title>
+  <link rel="stylesheet" href="css/home.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <a href="home.html" class="nav-item active">🏠 Feed</a>
+    <a href="profile.html" class="nav-item">👤 Profile</a>
+    <a href="settings.html" class="nav-item">⚙️ Settings</a>
+    <a href="login.html" class="nav-item logout-btn" id="logout-btn">🚪 Logout</a>
+  </nav>
+
+  <div class="tab-content" id="feed-tab">
+    <div class="post-creator">
+      <textarea id="post-content" placeholder="What's on your mind?"></textarea>
+      <select id="visibility">
+        <option>🌐 Public</option>
+        <option>🔒 Only Me</option>
+      </select>
+      <button id="post-btn">Post</button>
+    </div>
+    <div id="feed" class="feed"></div>
+  </div>
+
+  <script src="js/home.js"></script>
+  <script>
+    document.getElementById('post-btn').onclick = createPost;
+    document.getElementById('logout-btn').onclick = logout;
+  </script>
+</body>
+</html>
