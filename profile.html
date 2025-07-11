@@ -1,38 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Profile - Xinn Social</title>
-
-  <!-- Firebase -->
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Profile – Xinn Social</title>
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <!-- Config and shared logic -->
   <script src="js/firebase-config.js"></script>
-
+  <script src="js/update.js"></script>
+  <script src="js/auth.js"></script>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f2f5; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; }
     nav { background: #fff; padding: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-    nav a { margin-right: 15px; text-decoration: none; color: #333; font-weight: 500; }
+    nav a { margin-right: 15px; text-decoration: none; color: #333; }
     .container { max-width: 800px; margin: 30px auto; background: #fff; padding: 2rem; border-radius: 10px; }
-    h2 { color: #333; }
-    input, textarea {
-      width: 100%; padding: 0.75rem; margin: 0.5rem 0;
-      border: 1px solid #ccc; border-radius: 5px;
-    }
-    button {
-      padding: 0.75rem 1.5rem; background: #4a90e2; color: white;
-      border: none; border-radius: 5px; cursor: pointer;
-    }
-    button:hover { background: #3b7dc0; }
-    .avatar {
-      width: 100px; height: 100px; border-radius: 50%;
-      object-fit: cover; border: 2px solid #4a90e2;
-    }
+    .avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid #4a90e2; }
+    input, textarea, button { width: 100%; padding: 0.8rem; margin: 0.5rem 0; border-radius: 5px; border: 1px solid #ccc; }
+    button { background: #4a90e2; color: white; cursor: pointer; border: none; }
+    button:hover { background: #357abd; }
     .friends { margin-top: 2rem; }
-    .friend-item {
-      background: #f9f9f9; padding: 10px; border-radius: 6px; margin-bottom: 8px;
-    }
+    .friend-item { background: #f9f9f9; padding: 10px; border-radius: 6px; margin-bottom: 8px; }
   </style>
 </head>
 <body>
@@ -42,72 +31,70 @@
     <a href="search.html">Search</a>
     <a href="post.html">Posts</a>
     <a href="settings.html">Settings</a>
+    <a href="notifications.html">Notifications</a>
     <a href="#" id="logout">Logout</a>
   </nav>
-
   <div class="container">
-    <h2>My Profile</h2>
-    <img id="avatar" class="avatar" src="https://via.placeholder.com/100" alt="avatar" />
-    <input type="text" id="avatar-url" placeholder="Avatar URL" />
+    <h2>Your Profile</h2>
+    <img id="avatar" class="avatar" src="https://via.placeholder.com/100" alt="Your avatar" />
+    <input type="text" id="avatar-url" placeholder="Avatar image URL" />
     <input type="text" id="username" placeholder="Username" />
     <textarea id="bio" placeholder="Your bio..."></textarea>
-    <input type="date" id="birth" />
-    <button id="save-btn">Save</button>
+    <input type="date" id="birth" placeholder="Birthdate" />
+    <button id="save-btn">Save Profile</button>
     <p id="msg"></p>
-
     <div class="friends">
-      <h3>My Friends</h3>
+      <h3>Friends</h3>
       <div id="friend-list"></div>
     </div>
   </div>
 
   <script>
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    let uid;
+    (async () => {
+      if (! (await checkSystemUpdate())) return;
+      redirectIfNotLoggedIn();
+      document.getElementById("logout").onclick = logout;
 
-    auth.onAuthStateChanged(async user => {
-      if (!user) return (location.href = "login.html");
-      uid = user.uid;
-      const doc = await db.collection("users").doc(uid).get();
+      const authUser = firebase.auth().currentUser;
+      const uid = authUser.uid;
+      const userRef = firebase.firestore().collection("users").doc(uid);
+      
+      const doc = await userRef.get();
+      if (!doc.exists) { alert("Profile data missing"); return; }
       const data = doc.data();
-
       document.getElementById("avatar").src = data.avatar || "https://via.placeholder.com/100";
       document.getElementById("avatar-url").value = data.avatar || "";
       document.getElementById("username").value = data.username || "";
       document.getElementById("bio").value = data.bio || "";
       document.getElementById("birth").value = data.birth || "";
 
-      const friends = data.friends || [];
-      const list = document.getElementById("friend-list");
-      for (const f of friends) {
-        const fdoc = await db.collection("users").doc(f).get();
+      const flist = document.getElementById("friend-list");
+      (data.friends || []).forEach(async fid => {
+        const fdoc = await firebase.firestore().collection("users").doc(fid).get();
         const div = document.createElement("div");
         div.className = "friend-item";
         div.textContent = fdoc.data().username || "Friend";
-        list.appendChild(div);
-      }
-    });
+        flist.appendChild(div);
+      });
 
-    document.getElementById("save-btn").onclick = async () => {
-      const avatar = document.getElementById("avatar-url").value.trim();
-      const username = document.getElementById("username").value.trim();
-      const bio = document.getElementById("bio").value.trim();
-      const birth = document.getElementById("birth").value;
-      document.getElementById("msg").textContent = "";
-
-      try {
-        await db.collection("users").doc(uid).update({ avatar, username, bio, birth });
-        document.getElementById("msg").style.color = "green";
-        document.getElementById("msg").textContent = "Profile updated!";
-        document.getElementById("avatar").src = avatar || "https://via.placeholder.com/100";
-      } catch (e) {
-        document.getElementById("msg").style.color = "red";
-        document.getElementById("msg").textContent = e.message;
-      }
-    };
-
-    document.getElementById("logout").onclick = () => auth.signOut().then(() => location.href = "login.html");
+      document.getElementById("save-btn").onclick = async () => {
+        const updates = {
+          avatar: document.getElementById("avatar-url").value.trim(),
+          username: document.getElementById("username").value.trim(),
+          bio: document.getElementById("bio").value.trim(),
+          birth: document.getElementById("birth").value
+        };
+        try {
+          await userRef.update(updates);
+          document.getElementById("msg").style.color = "green";
+          document.getElementById("msg").textContent = "Profile updated.";
+          document.getElementById("avatar").src = updates.avatar || "https://via.placeholder.com/100";
+        } catch (e) {
+          document.getElementById("msg").style.color = "red";
+          document.getElementById("msg").textContent = e.message;
+        }
+      };
+    })();
   </script>
 </body>
 </html>
