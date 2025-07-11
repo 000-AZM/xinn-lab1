@@ -1,50 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Settings - Xinn Lab</title>
-  <link rel="stylesheet" href="css/settings.css" />
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
 </head>
 <body>
-  <nav class="navbar">
-    <a href="home.html" class="nav-item">🏠 Feed</a>
-    <a href="profile.html" class="nav-item">👤 Profile</a>
-    <a href="settings.html" class="nav-item active">⚙️ Settings</a>
-    <a href="login.html" class="nav-item logout-btn" id="logout-btn">🚪 Logout</a>
+  <nav>
+    <a href="profile.html">Profile</a> |
+    <a href="search.html">Search</a> |
+    <a href="chat.html">Chat</a> |
+    <a href="settings.html">Settings</a> |
+    <a href="#" id="logout-btn">Logout</a>
   </nav>
+  <h1>Settings</h1>
+  <button id="delete-account-btn" style="color:red;">Delete My Account</button>
 
-  <div class="tab-content">
-    <h2>Settings</h2>
-
-    <div class="setting-item">
-      <label for="dark-toggle">🌙 Dark Mode</label>
-      <input type="checkbox" id="dark-toggle" />
-    </div>
-
-    <div class="setting-item">
-      <label for="language">🌐 Language</label>
-      <select id="language">
-        <option>English</option>
-        <option>မြန်မာ</option>
-        <option>Vietnamese</option>
-      </select>
-    </div>
-
-    <div class="setting-item">
-      <label>ℹ️ About</label>
-      <p class="about-text">Xinn Lab Social App UI v1.0<br />Created by Ko Aung</p>
-    </div>
-  </div>
-
-<button onclick="deleteAccount()">🗑 Delete My Account</button>
-<script src="js/settings.js"></script>
-
-  <script src="js/settings.js"></script>
   <script>
-    document.getElementById('dark-toggle').onchange = toggleDarkMode;
-    document.getElementById('logout-btn').onclick = logout;
-    window.onload = loadSettings;
+    const logoutBtn = document.getElementById('logout-btn');
+    logoutBtn.onclick = () => auth.signOut().then(() => window.location.href = 'login.html');
+
+    auth.onAuthStateChanged(user => {
+      if (!user) window.location.href = 'login.html';
+    });
+
+    document.getElementById('delete-account-btn').onclick = async () => {
+      if (!confirm('Are you sure you want to delete your account? This action is irreversible.')) return;
+
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const uid = user.uid;
+
+      try {
+        // Delete Firestore user data
+        await db.collection('users').doc(uid).delete();
+
+        // Delete auth user
+        await user.delete();
+
+        alert('Account deleted.');
+        window.location.href = 'register.html';
+      } catch (error) {
+        alert('Error deleting account: ' + error.message);
+      }
+    };
   </script>
 </body>
 </html>
