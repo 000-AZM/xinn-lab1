@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Posts - Xinn Social</title>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+
+  <style>
+    body { font-family: Arial; background: #f2f3f5; margin: 0; }
+    nav { background: #fff; padding: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    nav a { margin-right: 10px; color: #333; text-decoration: none; font-weight: 500; }
+    .container { max-width: 600px; margin: 20px auto; background: white; padding: 20px; border-radius: 10px; }
+    textarea, select, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 6px; border: 1px solid #ccc; }
+    button { background: #4a90e2; color: white; border: none; }
+    button:hover { background: #357abd; }
+    .post { border-bottom: 1px solid #eee; padding: 10px 0; }
+    .post-header { display: flex; justify-content: space-between; font-size: 0.9rem; color: #666; }
+    .post-body { margin: 5px 0; }
+    .post-footer { display: flex; gap: 10px; font-size: 0.85rem; color: #444; align-items: center; }
+    .comment-box { margin-top: 10px; }
+    .comment { padding-left: 10px; border-left: 2px solid #eee; margin-top: 5px; font-size: 0.85rem; }
+    .avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      object-fit: cover; margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="profile.html">Profile</a>
+    <a href="chat.html">Chat</a>
+    <a href="search.html">Search</a>
+    <a href="post.html">Posts</a>
+    <a href="settings.html">Settings</a>
+    <a href="#" id="logout">Logout</a>
+  </nav>
+
+  <div class="container">
+    <h2>Create a Post</h2>
+    <textarea id="post-input" rows="3" placeholder="What's on your mind?"></textarea>
+    <select id="visibility">
+      <option value="public">🌐 Public</option>
+      <option value="private">🔒 Only Me</option>
+    </select>
+    <button id="post-btn">Post</button>
+
+    <div id="posts-container"></div>
+  </div>
+
+  <script>
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    let currentUser;
+
+    auth.onAuthStateChanged(async user => {
+      if (!user) return (location.href = "login.html");
+      currentUser = user;
+      loadPosts();
+    });
+
+    document.getElementById("logout").onclick = () => auth.signOut().then(() => location.href = "login.html");
+
+    document.getElementById("post-btn").onclick = async () => {
+      const content = document.getElementById("post-input").value.trim();
+      const visibility = document.getElementById("visibility").value;
+      if (!content) return;
+
+      await db.collection("posts").add({
+        uid: currentUser.uid,
+        content,
+        visibility,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        likes: [],
+        comments: []
+      });
+
+      document.getElementById("post-input").value = "";
+      loadPosts();
+    };
+
+    async function loadPosts() {
+      const snap = await db.collection("posts").orderBy("timestamp", "desc").get();
+      const container = document.getElementById("posts-container");
+      container.innerHTML = "";
+
+      for (const doc of snap.docs) {
+        const post = doc.data();
+        if (post.visibility === "private" && post.uid !== currentUser.uid) continue;
+
+        const userDoc = await db.collection("users").doc(post.uid).get();
+        const userData = userDoc.data();
+
+        const div = document.createElement("div");
+        div.className = "post";
+
+        div.innerHTML = `
+          <div class="post-header">
+            <div>
+              <img src="${userData.avatar || 'https://via.placeholder.com/30'}" class="avatar" />
+              <strong>${userData.username}</strong> • 
+              <small>${post.visibility === "public" ? "🌐" : "🔒"} ${new Date(post.timestamp?.toDate()).toLocaleString()}</small>
+            </div>
+            ${post.uid === currentUser.uid ? `<button onclick="editPost('${doc.id}', \`${post.content.replace(/`/g, "\\`")}\`)">✏️ Edit</button>` : ""}
+          </div>
+          <div class="post-body">${post.content}</div>
+          <div class="post-footer">
+            <span onclick="likePost('${doc.id}')">❤️ ${post.likes.length}</span>
+            <span onclick="toggleCommentBox('${doc.id}')">💬 Comment</span>
+          </div>
+          <div id="comments-${doc.id}" class="comment-box" style="display:none;">
+            <input type="text" placeholder="Write a comment..." onkeydown="if(event.key==='Enter'){submitComment('${doc.id}', this)}" />
+            ${post.comments.map(c => `<div class="comment">${c}</div>`).join('')}
+          </div>
+        `;
+        container.appendChild(div);
+      }
+    }
+
+    function toggleCommentBox(id) {
+      const el = document.getElementById(`comments-${id}`);
+      el.style.display = el.style.display === "none" ? "block" : "none";
+    }
+
+    async function likePost(id) {
+      const postRef = db.collection("posts").doc(id);
+      const doc = await postRef.get();
+      const likes = doc.data().likes || [];
+
+      if (likes.includes(currentUser.uid)) return;
+      await postRef.update({ likes: [...likes, currentUser.uid] });
+      loadPosts();
+    }
+
+    async function submitComment(id, input) {
+      const comment = input.value.trim();
+      if (!comment) return;
+
+      const postRef = db.collection("posts").doc(id);
+      const doc = await postRef.get();
+      const comments = doc.data().comments || [];
+
+      await postRef.update({ comments: [...comments, comment] });
+      input.value = "";
+      loadPosts();
+    }
+
+    async function editPost(id, content) {
+      const newText = prompt("Edit your post:", content);
+      if (newText !== null) {
+        await db.collection("posts").doc(id).update({ content: newText });
+        loadPosts();
+      }
+    }
+  </script>
+</body>
+</html>
