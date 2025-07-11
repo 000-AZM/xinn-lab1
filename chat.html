@@ -135,27 +135,30 @@
         currentFriendId = friendId;
         const chatInput = document.getElementById("chat-input");
         chatInput.disabled = false;
-        document.getElementById("chat-box").innerHTML = `<strong>Chat with ${friendName}</strong><br><br>`;
+        const box = document.getElementById("chat-box");
+        box.innerHTML = `<strong>Chat with ${friendName}</strong><br><br>`;
 
         if (unsubscribe) unsubscribe();
 
         unsubscribe = db
           .collection("chats")
           .orderBy("timestamp", "asc")
-          .onSnapshot((snapshot) => {
-            const box = document.getElementById("chat-box");
+          .onSnapshot(async (snapshot) => {
             box.innerHTML = `<strong>Chat with ${friendName}</strong><br><br>`;
-            snapshot.docs.forEach((doc) => {
+            for (const doc of snapshot.docs) {
               const d = doc.data();
               const isBetween =
                 (d.from === u.uid && d.to === friendId) || (d.from === friendId && d.to === u.uid);
               if (isBetween) {
+                const senderDoc = await db.collection("users").doc(d.from).get();
+                const senderName = senderDoc.data()?.username || "Unknown";
+
                 const msg = document.createElement("div");
                 msg.className = "msg " + (d.from === u.uid ? "you" : "them");
-                msg.textContent = d.message;
+                msg.innerHTML = `<div style="font-weight:bold; font-size:0.85rem; margin-bottom:3px;">${senderName}</div>${d.message}`;
                 box.appendChild(msg);
               }
-            });
+            }
             box.scrollTop = box.scrollHeight;
           });
       }
