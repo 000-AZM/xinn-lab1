@@ -1,60 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Search</title>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Search Users - Xinn Social</title>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js"></script>
-  <style>body{font-family:Arial;margin:20px}nav a{margin-right:10px;text-decoration:none}button{margin-left:5px}</style>
+
+  <style>
+    body { font-family: Arial; background: #f2f3f5; margin: 0; }
+    nav { background: #fff; padding: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    nav a { margin-right: 10px; color: #333; text-decoration: none; font-weight: 500; }
+    .container { max-width: 600px; margin: 20px auto; background: white; padding: 20px; border-radius: 10px; }
+    input { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; margin-bottom: 10px; }
+    .user-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+    button {
+      padding: 6px 12px; border: none; border-radius: 5px; background: #4a90e2; color: white;
+      cursor: pointer;
+    }
+    button:hover { background: #357abd; }
+  </style>
 </head>
 <body>
   <nav>
-    <a href="profile.html">Profile</a>|
-    <a href="search.html">Search</a>|
-    <a href="chat.html">Chat</a>|
-    <a href="settings.html">Settings</a>|
+    <a href="profile.html">Profile</a>
+    <a href="chat.html">Chat</a>
+    <a href="search.html">Search</a>
+    <a href="post.html">Posts</a>
+    <a href="settings.html">Settings</a>
     <a href="#" id="logout">Logout</a>
   </nav>
-  <div class="section">
-    <h2>Search Users</h2>
-    <input type="text" id="q" placeholder="Enter username" /><button id="go">Search</button>
+
+  <div class="container">
+    <h2>Find Friends</h2>
+    <input type="text" id="search-input" placeholder="Search username..." />
     <div id="results"></div>
   </div>
+
   <script>
-    document.getElementById('logout').onclick = ()=> auth.signOut().then(()=>location.href='login.html');
-    auth.onAuthStateChanged(u=>{ if(!u) location.href='login.html'; });
-    document.getElementById('go').onclick = async ()=>{
-      const kw = document.getElementById('q').value.trim().toLowerCase();
-      const snap = await db.collection('users').get();
-      const cur = auth.currentUser;
-      const res = document.getElementById('results');
-      res.innerHTML = '';
-      snap.forEach(doc=>{
-        const d = doc.data();
-        if(doc.id!==cur.uid && d.username.toLowerCase().includes(kw)){
-          const div = document.createElement('div');
-          div.textContent = d.username;
-          const btn = document.createElement('button');
-          btn.textContent='Add Friend';
-          btn.onclick =()=>send(cur.uid,doc.id);
-          div.append(btn);
-          res.append(div);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    let currentUser;
+    let currentUid;
+
+    auth.onAuthStateChanged(async user => {
+      if (!user) return (location.href = "login.html");
+      currentUser = user;
+      currentUid = user.uid;
+
+      document.getElementById("search-input").addEventListener("input", searchUsers);
+    });
+
+    document.getElementById("logout").onclick = () =>
+      auth.signOut().then(() => (location.href = "login.html"));
+
+    async function searchUsers() {
+      const query = document.getElementById("search-input").value.trim().toLowerCase();
+      const results = document.getElementById("results");
+      results.innerHTML = "";
+
+      if (!query) return;
+
+      const snap = await db.collection("users").get();
+      for (const doc of snap.docs) {
+        const data = doc.data();
+        const uid = doc.id;
+        if (data.username?.toLowerCase().includes(query) && uid !== currentUid) {
+          const div = document.createElement("div");
+          div.className = "user-item";
+          div.innerHTML = `
+            <span>${data.username}</span>
+            <button onclick="sendFriendRequest('${uid}', this)">Add</button>
+          `;
+          results.appendChild(div);
         }
-      });
-    };
-    async function send(myUid, oUid){
-      const mr = db.collection('users').doc(myUid), or = db.collection('users').doc(oUid);
-      await db.runTransaction(async tx=>{
-        const m = (await tx.get(mr)).data(), o = (await tx.get(or)).data();
-        if(m.friends.includes(oUid)) return alert('Already friends');
-        if(m.friendRequestsSent.includes(oUid)) return alert('Already sent');
-        if(m.friendRequestsReceived.includes(oUid)) return alert('They sent you one');
-        m.friendRequestsSent.push(oUid); o.friendRequestsReceived.push(myUid);
-        tx.update(mr,m); tx.update(or,o);
-      });
-      alert('Friend request sent');
+      }
+    }
+
+    async function sendFriendRequest(friendId, btn) {
+      const userRef = db.collection("users").doc(currentUid);
+      const friendRef = db.collection("users").doc(friendId);
+
+      const [myDoc, friendDoc] = await Promise.all([userRef.get(), friendRef.get()]);
+      const sent = myDoc.data().friendRequestsSent || [];
+      const received = friendDoc.data().friendRequestsReceived || [];
+
+      if (!sent.includes(friendId)) {
+        await userRef.update({
+          friendRequestsSent: [...sent, friendId]
+        });
+        await friendRef.update({
+          friendRequestsReceived: [...received, currentUid]
+        });
+        btn.textContent = "Sent ✅";
+        btn.disabled = true;
+      }
     }
   </script>
 </body>
