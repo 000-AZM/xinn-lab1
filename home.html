@@ -20,6 +20,41 @@
     <a href="login.html" class="nav-item logout-btn" id="logout-btn">🚪 Logout</a>
   </nav>
 
+// Example: Check "systemUpdate" flag in Firestore 'config' doc
+const db = firebase.firestore();
+
+async function checkSystemUpdate() {
+  try {
+    const doc = await db.collection("config").doc("systemStatus").get();
+    if (!doc.exists) {
+      console.log("No config document, continuing normally");
+      return true;
+    }
+
+    const data = doc.data();
+    if (data.updating === 1) {
+      alert("⚠️ System is currently updating. Please try again later.");
+      // Optionally disable UI here, or redirect
+      document.body.innerHTML = "<h2 style='text-align:center; margin-top:2rem;'>System is updating. Please check back later.</h2>";
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("Failed to check system update:", err);
+    return true; // fail safe - allow usage if error checking
+  }
+}
+
+// Call this on page load before app logic
+checkSystemUpdate().then(allowed => {
+  if (!allowed) {
+    // Optionally stop further JS execution here
+  } else {
+    // Continue normal app initialization here
+  }
+});
+
+
   <main style="max-width: 600px; margin: 20px auto;">
     <!-- Search User Section -->
     <div style="margin-bottom: 20px; display: flex; gap: 10px;">
@@ -36,6 +71,8 @@
         Search
       </button>
     </div>
+
+
 
     <!-- Search results -->
     <div id="search-results" style="margin-bottom: 30px;"></div>
@@ -58,6 +95,8 @@
       </button>
     </div>
   </main>
+
+
 
   <script src="js/home.js"></script>
   <script>
