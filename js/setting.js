@@ -23,24 +23,33 @@ function toggleDarkMode() {
 
 function deleteAccount() {
   const username = localStorage.getItem("xinnlab_logged_in_user");
-  if (!username || !confirm("Are you sure you want to delete your account?")) return;
+
+  if (!username) {
+    alert("No logged-in user.");
+    return;
+  }
+
+  const confirmDelete = confirm(`Are you sure you want to delete your account (${username})?`);
+  if (!confirmDelete) return;
 
   let accounts = JSON.parse(localStorage.getItem("xinnlab_accounts") || "[]");
 
-  // Remove user
-  accounts = accounts.filter(u => u.username !== username);
+  // Remove user from main list
+  accounts = accounts.filter(acc => acc.username !== username);
 
-  // Remove references from others
-  accounts.forEach(user => {
-    user.friends = user.friends.filter(f => f !== username);
-    user.friendRequestsSent = user.friendRequestsSent.filter(f => f !== username);
-    user.friendRequestsReceived = user.friendRequestsReceived.filter(f => f !== username);
+  // Also remove user from others' records
+  accounts.forEach(acc => {
+    acc.friends = acc.friends.filter(f => f !== username);
+    acc.friendRequestsSent = acc.friendRequestsSent.filter(r => r !== username);
+    acc.friendRequestsReceived = acc.friendRequestsReceived.filter(r => r !== username);
   });
 
+  // Save updated accounts list
   localStorage.setItem("xinnlab_accounts", JSON.stringify(accounts));
-  localStorage.removeItem("xinnlab_logged_in_user");
 
-  alert("Your account has been deleted.");
+  // Clear session and redirect
+  localStorage.removeItem("xinnlab_logged_in_user");
+  alert("✅ Account deleted.");
   window.location.href = "register.html";
 }
 
