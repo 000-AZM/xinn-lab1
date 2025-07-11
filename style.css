@@ -1,5 +1,4 @@
-/* Login Page */
-.login-page {
+.auth-page {
   max-width: 400px;
   margin: 100px auto;
   padding: 30px;
@@ -10,7 +9,7 @@
   color: var(--text-color);
 }
 
-.login-page input {
+.auth-page input {
   width: 100%;
   padding: 12px 10px;
   margin: 10px 0;
@@ -19,7 +18,7 @@
   border: 1px solid #ccc;
 }
 
-.login-page button {
+.auth-page button {
   background-color: var(--accent-color);
   color: white;
   border: none;
@@ -37,9 +36,4 @@
 
 .hidden {
   display: none;
-}
-
-.logout-btn {
-  color: #d9534f;
-  font-weight: bold;
 }
