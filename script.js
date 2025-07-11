@@ -1,4 +1,4 @@
-// script.js
+// Create new post
 function createPost() {
   const textarea = document.querySelector("textarea");
   const feed = document.getElementById("feed");
@@ -10,9 +10,18 @@ function createPost() {
   post.className = "post";
   post.innerText = content;
 
-  // Add new post to the top of the feed
-  feed.insertBefore(post, feed.firstChild);
-
-  // Clear textarea
+  feed.prepend(post);
   textarea.value = "";
+}
+
+// Tab switching logic
+function showTab(tab) {
+  const tabs = ["feed", "profile", "settings"];
+  tabs.forEach(t => {
+    document.getElementById(`${t}-tab`).classList.add("hidden");
+    document.querySelector(`.nav-item:nth-child(${tabs.indexOf(t) + 1})`).classList.remove("active");
+  });
+
+  document.getElementById(`${tab}-tab`).classList.remove("hidden");
+  document.querySelector(`.nav-item:nth-child(${tabs.indexOf(tab) + 1})`).classList.add("active");
 }
