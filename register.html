@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Register - Xinn Lab</title>
+  <link rel="stylesheet" href="css/auth.css" />
+</head>
+<body>
+  <div class="auth-page">
+    <h2>Register</h2>
+    <input type="text" id="register-username" placeholder="Username" />
+    <input type="password" id="register-password" placeholder="Password" />
+    <input type="password" id="register-confirm-password" placeholder="Confirm Password" />
+    <button id="register-btn">Register</button>
+    <p id="register-error" class="error-msg"></p>
+    <p>Already have an account? <a href="login.html">Login here</a></p>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    document.getElementById('register-btn').onclick = register;
+  </script>
+</body>
+</html>
