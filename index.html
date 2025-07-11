@@ -1,19 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Xinn Lab Social App</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
 <body>
-  <div class="app">
 
-    <!-- Navigation -->
+  <!-- Login Page -->
+  <div id="login-page" class="login-page">
+    <h2>Login to Xinn Lab</h2>
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+    <p id="login-error" class="error-msg"></p>
+  </div>
+
+  <!-- Main App -->
+  <div class="app hidden" id="app">
+
+    <!-- Navigation with Logout -->
     <nav class="navbar">
       <div class="nav-item active" onclick="showTab('feed')">🏠 Feed</div>
       <div class="nav-item" onclick="showTab('profile')">👤 Profile</div>
       <div class="nav-item" onclick="showTab('settings')">⚙️ Settings</div>
+      <div class="nav-item logout-btn" onclick="logout()">🚪 Logout</div>
     </nav>
 
     <!-- Feed Tab -->
@@ -66,6 +70,5 @@
 
   </div>
 
-  <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
-</html>
