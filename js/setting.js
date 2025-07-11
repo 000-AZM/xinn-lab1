@@ -19,24 +19,28 @@ function toggleDarkMode() {
 
 // js/settings.js
 
+// js/settings.js
+
 function deleteAccount() {
   const username = localStorage.getItem("xinnlab_logged_in_user");
-  if (!confirm("Are you sure you want to delete your account?")) return;
+  if (!username || !confirm("Are you sure you want to delete your account?")) return;
 
   let accounts = JSON.parse(localStorage.getItem("xinnlab_accounts") || "[]");
+
+  // Remove user
   accounts = accounts.filter(u => u.username !== username);
 
-  // Also remove from others' friends and requests
-  accounts.forEach(u => {
-    u.friends = u.friends.filter(f => f !== username);
-    u.friendRequestsSent = u.friendRequestsSent.filter(f => f !== username);
-    u.friendRequestsReceived = u.friendRequestsReceived.filter(f => f !== username);
+  // Remove references from others
+  accounts.forEach(user => {
+    user.friends = user.friends.filter(f => f !== username);
+    user.friendRequestsSent = user.friendRequestsSent.filter(f => f !== username);
+    user.friendRequestsReceived = user.friendRequestsReceived.filter(f => f !== username);
   });
 
   localStorage.setItem("xinnlab_accounts", JSON.stringify(accounts));
   localStorage.removeItem("xinnlab_logged_in_user");
 
-  alert("Account deleted.");
+  alert("Your account has been deleted.");
   window.location.href = "register.html";
 }
 
