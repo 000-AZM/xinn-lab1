@@ -5,6 +5,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Profile - Xinn Lab</title>
   <link rel="stylesheet" href="css/home.css" />
+  <style>
+    /* Inline CSS for profile edit inputs and buttons */
+    #profile-edit label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+    }
+
+    #profile-edit input, #profile-edit textarea {
+      margin-bottom: 10px;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    #edit-profile-btn, #save-profile-btn, #cancel-profile-btn {
+      margin: 5px 5px 0 0;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+    }
+
+    #edit-profile-btn {
+      background-color: #4267B2;
+      color: white;
+    }
+
+    #save-profile-btn {
+      background-color: #28a745;
+      color: white;
+    }
+
+    #cancel-profile-btn {
+      background-color: #dc3545;
+      color: white;
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar">
@@ -14,18 +54,46 @@
     <a href="login.html" class="nav-item logout-btn" id="logout-btn">🚪 Logout</a>
   </nav>
 
-  <div class="profile">
+  <div class="profile" style="max-width: 400px; margin: 30px auto; text-align: center;">
     <img id="profile-avatar" alt="Avatar" class="avatar" />
     <h2 id="profile-username"></h2>
-    <p class="bio" id="profile-bio"></p>
-    <p><strong>🎂 Birthdate:</strong> <span id="profile-birth"></span></p>
-    <p><strong>📧 Email:</strong> <span id="profile-email"></span></p>
+
+    <div id="profile-view">
+      <p class="bio" id="profile-bio"></p>
+      <p><strong>🎂 Birthdate:</strong> <span id="profile-birth"></span></p>
+      <p><strong>📧 Email:</strong> <span id="profile-email"></span></p>
+    </div>
+
+    <div id="profile-edit" style="display:none;">
+      <label for="edit-avatar">Avatar URL:</label>
+      <input type="text" id="edit-avatar" />
+
+      <label for="edit-bio">Bio:</label>
+      <textarea id="edit-bio" rows="3"></textarea>
+
+      <label for="edit-birth">Birthdate:</label>
+      <input type="date" id="edit-birth" />
+
+      <label for="edit-email">Email:</label>
+      <input type="email" id="edit-email" />
+    </div>
+
+    <button id="edit-profile-btn">✏️ Edit Profile</button>
+    <button id="save-profile-btn" style="display:none;">💾 Save</button>
+    <button id="cancel-profile-btn" style="display:none;">❌ Cancel</button>
   </div>
 
   <script src="js/home.js"></script>
   <script>
-    window.onload = loadProfile;
-    document.getElementById('logout-btn').onclick = logout;
+    window.onload = function() {
+      loadProfile();
+
+      document.getElementById("edit-profile-btn").onclick = enableEditProfile;
+      document.getElementById("cancel-profile-btn").onclick = cancelEditProfile;
+      document.getElementById("save-profile-btn").onclick = saveProfile;
+
+      document.getElementById("logout-btn").onclick = logout;
+    };
   </script>
 </body>
 </html>
