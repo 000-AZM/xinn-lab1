@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login - Xinn Lab</title>
+  <link rel="stylesheet" href="css/auth.css" />
+</head>
+<body>
+  <div class="auth-page">
+    <h2>Login</h2>
+    <input type="text" id="login-username" placeholder="Username" />
+    <input type="password" id="login-password" placeholder="Password" />
+    <button id="login-btn">Login</button>
+    <p id="login-error" class="error-msg"></p>
+    <p>Don't have an account? <a href="register.html">Register here</a></p>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    document.getElementById('login-btn').onclick = login;
+  </script>
+</body>
+</html>
