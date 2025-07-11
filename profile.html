@@ -1,112 +1,70 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Profile - Xinn Lab</title>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Profile</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js"></script>
+  <style>
+    body{font-family:Arial;margin:20px}
+    nav a{margin-right:10px;text-decoration:none}
+    .section{margin-top:1rem}
+    button{margin-left:5px}
+  </style>
 </head>
 <body>
   <nav>
-    <a href="profile.html">Profile</a> |
-    <a href="search.html">Search</a> |
-    <a href="chat.html">Chat</a> |
-    <a href="settings.html">Settings</a> |
-    <a href="#" id="logout-btn">Logout</a>
+    <a href="profile.html">Profile</a>|
+    <a href="search.html">Search</a>|
+    <a href="chat.html">Chat</a>|
+    <a href="settings.html">Settings</a>|
+    <a href="#" id="logout">Logout</a>
   </nav>
-  <h1>Profile</h1>
-  <div id="profile-info"></div>
-  <h3>Friend Requests</h3>
-  <div id="friend-requests"></div>
-  <h3>Friends</h3>
-  <div id="friends-list"></div>
+  <div id="info" class="section"><h2>Profile</h2></div>
+  <div id="requests" class="section"><h3>Friend Requests</h3></div>
+  <div id="friends" class="section"><h3>Friends</h3></div>
 
   <script>
-    const profileInfo = document.getElementById('profile-info');
-    const friendRequestsDiv = document.getElementById('friend-requests');
-    const friendsListDiv = document.getElementById('friends-list');
-    const logoutBtn = document.getElementById('logout-btn');
-
-    logoutBtn.onclick = () => auth.signOut().then(() => window.location.href = 'login.html');
-
-    auth.onAuthStateChanged(async user => {
-      if (!user) {
-        window.location.href = 'login.html';
-        return;
+    document.getElementById('logout').onclick = () => auth.signOut().then(()=>location.href='login.html');
+    auth.onAuthStateChanged(async u => {
+      if (!u) return location.href='login.html';
+      const doc = await db.collection('users').doc(u.uid).get();
+      if (!doc.exists) return alert('User data missing');
+      const data = doc.data();
+      document.getElementById('info').innerHTML = `<p><strong>Username:</strong> ${data.username}</p><p><strong>Email:</strong> ${data.email}</p><p><strong>Bio:</strong> ${data.bio||'(empty)'}</p>`;
+      document.getElementById('requests').innerHTML = '<h3>Friend Requests</h3>';
+      for (let rid of data.friendRequestsReceived) {
+        const rd = await db.collection('users').doc(rid).get();
+        if (!rd.exists) continue;
+        const rname = rd.data().username;
+        const div = document.createElement('div');
+        div.textContent = rname;
+        const acc = document.createElement('button'); acc.textContent='Accept'; acc.onclick =()=>respond(u.uid,rid,true);
+        const dec = document.createElement('button'); dec.textContent='Decline'; dec.onclick =()=>respond(u.uid,rid,false);
+        div.append(acc,dec); document.getElementById('requests').append(div);
       }
-      const doc = await db.collection('users').doc(user.uid).get();
-      if (!doc.exists) {
-        profileInfo.textContent = 'User profile not found.';
-        return;
-      }
-
-      const userData = doc.data();
-      profileInfo.innerHTML = `<p><strong>Username:</strong> ${userData.username}</p>
-                               <p><strong>Email:</strong> ${userData.email}</p>
-                               <p><strong>Bio:</strong> ${userData.bio || '(empty)'}</p>`;
-
-      // Friend requests UI
-      friendRequestsDiv.innerHTML = '';
-      for (const requesterId of userData.friendRequestsReceived) {
-        const reqDoc = await db.collection('users').doc(requesterId).get();
-        if (!reqDoc.exists) continue;
-        const requester = reqDoc.data();
-
-        const reqElem = document.createElement('div');
-        reqElem.textContent = requester.username;
-        const acceptBtn = document.createElement('button');
-        acceptBtn.textContent = 'Accept';
-        acceptBtn.onclick = () => respondToRequest(user.uid, requesterId, true);
-
-        const declineBtn = document.createElement('button');
-        declineBtn.textContent = 'Decline';
-        declineBtn.onclick = () => respondToRequest(user.uid, requesterId, false);
-
-        reqElem.appendChild(acceptBtn);
-        reqElem.appendChild(declineBtn);
-        friendRequestsDiv.appendChild(reqElem);
-      }
-
-      // Friends list UI
-      friendsListDiv.innerHTML = '';
-      for (const friendId of userData.friends) {
-        const friendDoc = await db.collection('users').doc(friendId).get();
-        if (!friendDoc.exists) continue;
-        const friend = friendDoc.data();
-        const friendElem = document.createElement('div');
-        friendElem.textContent = friend.username;
-        friendsListDiv.appendChild(friendElem);
+      document.getElementById('friends').innerHTML = '<h3>Friends</h3>';
+      for (let fid of data.friends) {
+        const fd = await db.collection('users').doc(fid).get();
+        if (!fd.exists) continue;
+        const fdiv = document.createElement('div');
+        fdiv.textContent = fd.data().username;
+        document.getElementById('friends').append(fdiv);
       }
     });
-
-    async function respondToRequest(currentUid, requesterUid, accept) {
-      const currentUserRef = db.collection('users').doc(currentUid);
-      const requesterRef = db.collection('users').doc(requesterUid);
-
-      await db.runTransaction(async (transaction) => {
-        const currentUserDoc = await transaction.get(currentUserRef);
-        const requesterDoc = await transaction.get(requesterRef);
-
-        if (!currentUserDoc.exists || !requesterDoc.exists) return;
-
-        let currentData = currentUserDoc.data();
-        let requesterData = requesterDoc.data();
-
-        // Remove request
-        currentData.friendRequestsReceived = currentData.friendRequestsReceived.filter(id => id !== requesterUid);
-        requesterData.friendRequestsSent = requesterData.friendRequestsSent.filter(id => id !== currentUid);
-
-        if (accept) {
-          currentData.friends.push(requesterUid);
-          requesterData.friends.push(currentUid);
-        }
-
-        transaction.update(currentUserRef, currentData);
-        transaction.update(requesterRef, requesterData);
+    async function respond(myUid, otherUid, accept){
+      const myRef = db.collection('users').doc(myUid), oRef = db.collection('users').doc(otherUid);
+      await db.runTransaction(async tx =>{
+        const myDoc = await tx.get(myRef), oDoc = await tx.get(oRef);
+        if (!myDoc.exists||!oDoc.exists) return;
+        const my = myDoc.data(), o = oDoc.data();
+        my.friendRequestsReceived = my.friendRequestsReceived.filter(x=>x!==otherUid);
+        o.friendRequestsSent = o.friendRequestsSent.filter(x=>x!==myUid);
+        if (accept){ my.friends.push(otherUid); o.friends.push(myUid); }
+        tx.update(myRef,my); tx.update(oRef,o);
       });
-
-      alert(accept ? 'Friend request accepted' : 'Friend request declined');
       location.reload();
     }
   </script>
