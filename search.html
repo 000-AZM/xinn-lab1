@@ -1,107 +1,61 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Search - Xinn Lab</title>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Search</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js"></script>
+  <style>body{font-family:Arial;margin:20px}nav a{margin-right:10px;text-decoration:none}button{margin-left:5px}</style>
 </head>
 <body>
   <nav>
-    <a href="profile.html">Profile</a> |
-    <a href="search.html">Search</a> |
-    <a href="chat.html">Chat</a> |
-    <a href="settings.html">Settings</a> |
-    <a href="#" id="logout-btn">Logout</a>
+    <a href="profile.html">Profile</a>|
+    <a href="search.html">Search</a>|
+    <a href="chat.html">Chat</a>|
+    <a href="settings.html">Settings</a>|
+    <a href="#" id="logout">Logout</a>
   </nav>
-  <h1>Search Users</h1>
-  <input type="text" id="search-input" placeholder="Username" />
-  <button id="search-btn">Search</button>
-  <div id="results"></div>
-
+  <div class="section">
+    <h2>Search Users</h2>
+    <input type="text" id="q" placeholder="Enter username" /><button id="go">Search</button>
+    <div id="results"></div>
+  </div>
   <script>
-    const logoutBtn = document.getElementById('logout-btn');
-    logoutBtn.onclick = () => auth.signOut().then(() => window.location.href = 'login.html');
-
-    auth.onAuthStateChanged(user => {
-      if (!user) window.location.href = 'login.html';
-    });
-
-    document.getElementById('search-btn').onclick = async () => {
-      const keyword = document.getElementById('search-input').value.trim().toLowerCase();
-      if (!keyword) return;
-
-      const resultsDiv = document.getElementById('results');
-      resultsDiv.innerHTML = 'Searching...';
-
-      const snapshot = await db.collection('users').get();
-      const users = [];
-
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        if (data.username.toLowerCase().includes(keyword)) {
-          users.push({ id: doc.id, username: data.username });
+    document.getElementById('logout').onclick = ()=> auth.signOut().then(()=>location.href='login.html');
+    auth.onAuthStateChanged(u=>{ if(!u) location.href='login.html'; });
+    document.getElementById('go').onclick = async ()=>{
+      const kw = document.getElementById('q').value.trim().toLowerCase();
+      const snap = await db.collection('users').get();
+      const cur = auth.currentUser;
+      const res = document.getElementById('results');
+      res.innerHTML = '';
+      snap.forEach(doc=>{
+        const d = doc.data();
+        if(doc.id!==cur.uid && d.username.toLowerCase().includes(kw)){
+          const div = document.createElement('div');
+          div.textContent = d.username;
+          const btn = document.createElement('button');
+          btn.textContent='Add Friend';
+          btn.onclick =()=>send(cur.uid,doc.id);
+          div.append(btn);
+          res.append(div);
         }
       });
-
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
-
-      resultsDiv.innerHTML = '';
-      users.forEach(user => {
-        if (user.id === currentUser.uid) return; // skip self
-
-        const userDiv = document.createElement('div');
-        userDiv.textContent = user.username;
-
-        const addBtn = document.createElement('button');
-        addBtn.textContent = 'Add Friend';
-        addBtn.onclick = async () => {
-          const currentUserRef = db.collection('users').doc(currentUser.uid);
-          const friendRef = db.collection('users').doc(user.id);
-
-          await db.runTransaction(async (transaction) => {
-            const currentUserDoc = await transaction.get(currentUserRef);
-            const friendDoc = await transaction.get(friendRef);
-
-            if (!currentUserDoc.exists || !friendDoc.exists) {
-              alert('User not found');
-              return;
-            }
-
-            let currentData = currentUserDoc.data();
-            let friendData = friendDoc.data();
-
-            if (currentData.friends.includes(user.id)) {
-              alert('Already friends');
-              return;
-            }
-
-            if (currentData.friendRequestsSent.includes(user.id)) {
-              alert('Request already sent');
-              return;
-            }
-
-            if (currentData.friendRequestsReceived.includes(user.id)) {
-              alert('They sent you a request. Accept it on your profile.');
-              return;
-            }
-
-            currentData.friendRequestsSent.push(user.id);
-            friendData.friendRequestsReceived.push(currentUser.uid);
-
-            transaction.update(currentUserRef, currentData);
-            transaction.update(friendRef, friendData);
-
-            alert('Friend request sent');
-          });
-        };
-
-        userDiv.appendChild(addBtn);
-        resultsDiv.appendChild(userDiv);
-      });
     };
+    async function send(myUid, oUid){
+      const mr = db.collection('users').doc(myUid), or = db.collection('users').doc(oUid);
+      await db.runTransaction(async tx=>{
+        const m = (await tx.get(mr)).data(), o = (await tx.get(or)).data();
+        if(m.friends.includes(oUid)) return alert('Already friends');
+        if(m.friendRequestsSent.includes(oUid)) return alert('Already sent');
+        if(m.friendRequestsReceived.includes(oUid)) return alert('They sent you one');
+        m.friendRequestsSent.push(oUid); o.friendRequestsReceived.push(myUid);
+        tx.update(mr,m); tx.update(or,o);
+      });
+      alert('Friend request sent');
+    }
   </script>
 </body>
 </html>
