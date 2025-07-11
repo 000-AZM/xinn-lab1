@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notifications - Xinn Social</title>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+
+  <style>
+    body { font-family: Arial; background: #f2f3f5; margin: 0; }
+    nav { background: #fff; padding: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    nav a { margin-right: 10px; color: #333; text-decoration: none; font-weight: 500; }
+    .container { max-width: 600px; margin: 20px auto; background: white; padding: 20px; border-radius: 10px; }
+    h2 { margin-bottom: 1rem; }
+    .notification {
+      background: #fafafa; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 6px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    button {
+      background: #4a90e2; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer;
+      margin-left: 5px;
+    }
+    button:hover { background: #357abd; }
+    .btn-danger {
+      background: #e74c3c;
+    }
+    .btn-danger:hover {
+      background: #c0392b;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="profile.html">Profile</a>
+    <a href="chat.html">Chat</a>
+    <a href="search.html">Search</a>
+    <a href="post.html">Posts</a>
+    <a href="settings.html">Settings</a>
+    <a href="notifications.html">Notifications</a>
+    <a href="#" id="logout">Logout</a>
+  </nav>
+
+  <div class="container">
+    <h2>Notifications</h2>
+    <div id="friend-requests">
+      <h3>Friend Requests</h3>
+      <div id="friend-req-list"></div>
+    </div>
+
+    <div id="comments-notif" style="margin-top: 2rem;">
+      <h3>Comments on Your Posts</h3>
+      <div id="comments-list"></div>
+    </div>
+  </div>
+
+  <script>
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    let currentUser, currentUid;
+
+    auth.onAuthStateChanged(async user => {
+      if (!user) return (location.href = "login.html");
+      currentUser = user;
+      currentUid = user.uid;
+      loadFriendRequests();
+      loadComments();
+    });
+
+    document.getElementById("logout").onclick = () =>
+      auth.signOut().then(() => (location.href = "login.html"));
+
+    async function loadFriendRequests() {
+      const userDoc = await db.collection("users").doc(currentUid).get();
+      const data = userDoc.data();
+      const received = data.friendRequestsReceived || [];
+      const list = document.getElementById("friend-req-list");
+      list.innerHTML = "";
+
+      for (const senderId of received) {
+        const senderDoc = await db.collection("users").doc(senderId).get();
+        const senderName = senderDoc.data().username || "Someone";
+
+        const div = document.createElement("div");
+        div.className = "notification";
+        div.innerHTML = `
+          <span>${senderName} sent you a friend request</span>
+          <div>
+            <button onclick="acceptFriend('${senderId}')">Accept</button>
+            <button class="btn-danger" onclick="rejectFriend('${senderId}')">Reject</button>
+          </div>
+        `;
+        list.appendChild(div);
+      }
+
+      if (received.length === 0) {
+        list.textContent = "No friend requests.";
+      }
+    }
+
+    async function acceptFriend(senderId) {
+      const userRef = db.collection("users").doc(currentUid);
+      const senderRef = db.collection("users").doc(senderId);
+
+      const [userDoc, senderDoc] = await Promise.all([userRef.get(), senderRef.get()]);
+      const userData = userDoc.data();
+      const senderData = senderDoc.data();
+
+      // Update friends lists
+      const userFriends = new Set(userData.friends || []);
+      const senderFriends = new Set(senderData.friends || []);
+
+      userFriends.add(senderId);
+      senderFriends.add(currentUid);
+
+      // Remove from friendRequestsReceived and friendRequestsSent
+      const newReceived = (userData.friendRequestsReceived || []).filter(id => id !== senderId);
+      const newSent = (senderData.friendRequestsSent || []).filter(id => id !== currentUid);
+
+      await userRef.update({
+        friends: Array.from(userFriends),
+        friendRequestsReceived: newReceived
+      });
+
+      await senderRef.update({
+        friends: Array.from(senderFriends),
+        friendRequestsSent: newSent
+      });
+
+      loadFriendRequests();
+      alert("Friend request accepted.");
+    }
+
+    async function rejectFriend(senderId) {
+      const userRef = db.collection("users").doc(currentUid);
+      const senderRef = db.collection("users").doc(senderId);
+
+      const [userDoc, senderDoc] = await Promise.all([userRef.get(), senderRef.get()]);
+      const userData = userDoc.data();
+      const senderData = senderDoc.data();
+
+      const newReceived = (userData.friendRequestsReceived || []).filter(id => id !== senderId);
+      const newSent = (senderData.friendRequestsSent || []).filter(id => id !== currentUid);
+
+      await userRef.update({ friendRequestsReceived: newReceived });
+      await senderRef.update({ friendRequestsSent: newSent });
+
+      loadFriendRequests();
+      alert("Friend request rejected.");
+    }
+
+    async function loadComments() {
+      const postsSnap = await db.collection("posts").where("uid", "==", currentUid).get();
+      const commentsList = document.getElementById("comments-list");
+      commentsList.innerHTML = "";
+
+      if (postsSnap.empty) {
+        commentsList.textContent = "No comments on your posts.";
+        return;
+      }
+
+      for (const postDoc of postsSnap.docs) {
+        const postData = postDoc.data();
+        const postId = postDoc.id;
+
+        if (!postData.comments || postData.comments.length === 0) continue;
+
+        postData.comments.forEach(comment => {
+          const div = document.createElement("div");
+          div.className = "notification";
+          div.textContent = comment;
+          commentsList.appendChild(div);
+        });
+      }
+
+      if (!commentsList.hasChildNodes()) {
+        commentsList.textContent = "No comments on your posts.";
+      }
+    }
+  </script>
+</body>
+</html>
