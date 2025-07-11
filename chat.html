@@ -27,5 +27,17 @@
   <button id="send-chat-btn">Send</button>
 
   <script src="js/chat.js"></script>
+
+<div id="navbar"></div>
+
+<script>
+  fetch("components/navbar.html")
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById("navbar").innerHTML = html;
+    });
+</script>
+<script src="js/auth.js"></script>
+
 </body>
 </html>
