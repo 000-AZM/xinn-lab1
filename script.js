@@ -1,4 +1,4 @@
-// Create new post
+// Post logic
 function createPost() {
   const textarea = document.querySelector("textarea");
   const feed = document.getElementById("feed");
@@ -14,7 +14,7 @@ function createPost() {
   textarea.value = "";
 }
 
-// Tab switching logic
+// Navigation tabs
 function showTab(tab) {
   const tabs = ["feed", "profile", "settings"];
   tabs.forEach(t => {
@@ -24,4 +24,9 @@ function showTab(tab) {
 
   document.getElementById(`${tab}-tab`).classList.remove("hidden");
   document.querySelector(`.nav-item:nth-child(${tabs.indexOf(tab) + 1})`).classList.add("active");
+}
+
+// Dark mode toggle
+function toggleDarkMode() {
+  document.body.classList.toggle("dark");
 }
