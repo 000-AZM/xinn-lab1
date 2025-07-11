@@ -3,11 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Register - Xinn Lab</title>
+  <title>Login - Xinn Lab</title>
+
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <!-- Your Firebase config -->
   <script src="js/firebase-config.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -50,7 +55,7 @@
     button:hover {
       background-color: #357abd;
     }
-    #reg-msg {
+    #login-msg {
       color: red;
       min-height: 1.2rem;
       margin-top: 0.5rem;
@@ -71,58 +76,45 @@
 </head>
 <body>
   <div class="container">
-    <h1>Create Account</h1>
-    <form id="register-form">
-      <input id="reg-username" placeholder="Username" required />
-      <input id="reg-email" type="email" placeholder="Email (must end with @xinn.lab)" required />
-      <input id="reg-password" type="password" placeholder="Password" required minlength="6" />
-      <button type="submit">Register</button>
+    <h1>Login</h1>
+    <form id="login-form">
+      <input id="login-email" type="email" placeholder="Email" required />
+      <input id="login-password" type="password" placeholder="Password" required minlength="6" />
+      <button type="submit">Login</button>
     </form>
-    <p id="reg-msg"></p>
+    <p id="login-msg"></p>
     <p class="switch-link">
-      Already have an account? <a href="login.html">Login here</a>
+      Don't have an account? <a href="register.html">Register here</a>
     </p>
   </div>
 
   <script>
-    const form = document.getElementById('register-form');
-    const msg = document.getElementById('reg-msg');
+    const form = document.getElementById('login-form');
+    const msg = document.getElementById('login-msg');
 
     form.addEventListener('submit', e => {
       e.preventDefault();
       msg.textContent = '';
+      
+      const email = form['login-email'].value.trim();
+      const password = form['login-password'].value;
 
-      const username = form['reg-username'].value.trim();
-      const email = form['reg-email'].value.trim();
-      const password = form['reg-password'].value;
-
-      if (!email.endsWith('@xinn.lab')) {
-        msg.textContent = 'Email must end with @xinn.lab';
-        return;
-      }
-
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(userCredential => {
-          const user = userCredential.user;
-          return db.collection('users').doc(user.uid).set({
-            username,
-            email,
-            bio: '',
-            avatar: '',
-            friends: [],
-            friendRequestsSent: [],
-            friendRequestsReceived: []
-          });
-        })
+      firebase.auth().signInWithEmailAndPassword(email, password)
         .then(() => {
-          msg.style.color = 'green';
-          msg.textContent = 'Registration successful! Redirecting to login...';
-          setTimeout(() => window.location.href = 'login.html', 1500);
+          // Redirect to profile page after successful login
+          window.location.href = 'profile.html';
         })
         .catch(error => {
           msg.style.color = 'red';
           msg.textContent = error.message;
         });
+    });
+
+    // Optional: Redirect logged-in users away from login page
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        window.location.href = 'profile.html';
+      }
     });
   </script>
 </body>
