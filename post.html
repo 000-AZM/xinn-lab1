@@ -1,73 +1,120 @@
 <!DOCTYPE html>
-<html lang="en"><head>…</head><body>
-<nav>…logout…</nav>
-<div class="…container…">
-  <h2>Posts</h2>
-  <textarea id="new-post" placeholder="What's new?"></textarea>
-  <select id="visibility"><option value="public">Public</option><option value="private">Only Me</option></select>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Posts</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/update.js"></script>
+<script src="js/auth.js"></script>
+<style>
+body{font-family:Arial;background:#f5f5f5;margin:0}
+nav{background:#fff;padding:1rem;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
+nav a{margin-right:10px;color:#333;text-decoration:none}
+.container{max-width:600px;margin:20px auto;background:#fff;padding:20px;border-radius:6px}
+textarea,select,button{width:100%;margin:10px 0;padding:8px;border-radius:4px;border:1px solid #ccc;font-size:1rem}
+button{background:#4a90e2;color:white;border:none;cursor:pointer}
+button:hover{background:#357abd}
+.post{border-bottom:1px solid #eee;padding:10px 0}
+.post-header{display:flex;justify-content:space-between;color:#666;font-size:0.9rem}
+.post-body{margin:5px 0}
+.post-footer{display:flex;gap:10px;font-size:0.85rem;cursor:pointer}
+.avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;margin-right:6px}
+.comment-box{margin-top:10px}
+.comment{padding-left:10px;border-left:2px solid #eee;margin-top:5px;font-size:0.85rem}
+</style>
+</head>
+<body>
+<nav>
+  <a href="profile.html">Profile</a>
+  <a href="chat.html">Chat</a>
+  <a href="search.html">Search</a>
+  <a href="post.html">Posts</a>
+  <a href="notifications.html">Notifications</a>
+  <a href="settings.html">Settings</a>
+  <a href="#" id="logout">Logout</a>
+</nav>
+<div class="container">
+  <h2>Create a Post</h2>
+  <textarea id="new-post" rows="3" placeholder="What's on your mind?"></textarea>
+  <select id="visibility"><option value="public">🌐 Public</option><option value="private">🔒 Only Me</option></select>
   <button id="post-btn">Post</button>
   <div id="posts-area"></div>
 </div>
-
 <script>
-  (async () => {
-    if (! (await checkSystemUpdate())) return;
-    redirectIfNotLoggedIn();
-    document.getElementById("logout").onclick = logout;
-    const db = firebase.firestore(), u = firebase.auth().currentUser;
-    document.getElementById("post-btn").onclick = async () => {
-      const content = document.getElementById("new-post").value.trim();
-      if (!content) return;
-      await db.collection("posts").add({
-        uid: u.uid,
-        content,
-        visibility: document.getElementById("visibility").value,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        likes: [],
-        comments: []
-      });
-      loadPosts();
-    };
-    async function loadPosts() {
-      const snaps = await db.collection("posts").orderBy("timestamp", "desc").get();
-      const area = document.getElementById("posts-area");
-      area.innerHTML = "";
-      for (const doc of snaps.docs) {
-        const p = doc.data();
-        if (p.visibility === "private" && p.uid !== u.uid) continue;
-        const udoc = await db.collection("users").doc(p.uid).get();
-        const div = document.createElement("div");
-        div.innerHTML = `
-          <div><img src="${udoc.data().avatar||'…'}" style="width:30px;"/><strong>${udoc.data().username}</strong> • ${new Date(p.timestamp?.toDate()).toLocaleString()}</div>
-          <p>${p.content}</p>
-          <div>
-            <span onclick="like('${doc.id}')">❤️ ${p.likes.length}</span>
-            <span onclick="toggleComent('${doc.id}')">💬</span>
-          </div>
-          <div id="c-${doc.id}" style="display:none;">
-            <input placeholder="Comment..." onkeydown="if(event.key==='Enter') comment('${doc.id}', this)" />
-            ${(p.comments||[]).map(c=>`<div>${c}</div>`).join('')}
-          </div>
-        `;
-        area.appendChild(div);
-      }
+(async()=>{
+  if(!(await checkSystemUpdate()))return;
+  redirectIfNotLoggedIn();
+  document.getElementById('logout').onclick=logout;
+  await new Promise(r=>firebase.auth().onAuthStateChanged(u=>u?r():null));
+  const u=firebase.auth().currentUser;
+  const db=firebase.firestore();
+
+  async function loadPosts(){
+    const snap=await db.collection('posts').orderBy('timestamp','desc').get();
+    const area=document.getElementById('posts-area'); area.innerHTML='';
+    for(const doc of snap.docs){
+      const p=doc.data();
+      if(p.visibility==='private' && p.uid!==u.uid)continue;
+      const userDoc=await db.collection('users').doc(p.uid).get();
+      const userData=userDoc.data();
+      const div=document.createElement('div'); div.className='post';
+      div.innerHTML=`
+        <div class="post-header">
+          <div><img src="${userData.avatar||'https://via.placeholder.com/30'}" class="avatar"/><strong>${userData.username}</strong> • ${new Date(p.timestamp?.toDate()).toLocaleString()}</div>
+          ${p.uid===u.uid?`<button onclick="editPost('${doc.id}','${p.content.replace(/`/g,'\\`')}')">✏️</button>`:''}
+        </div>
+        <div class="post-body">${p.content}</div>
+        <div class="post-footer">
+          <span onclick="likePost('${doc.id}')">❤️ ${p.likes?.length||0}</span>
+          <span onclick="toggleComment('${doc.id}')">💬 Comment</span>
+        </div>
+        <div id="c-${doc.id}" class="comment-box" style="display:none;">
+          <input type="text" placeholder="Write a comment..." onkeydown="if(event.key==='Enter'){submitComment('${doc.id}',this)}"/>
+          ${(p.comments||[]).map(c=>`<div class="comment">${c}</div>`).join('')}
+        </div>`;
+      area.appendChild(div);
     }
-    window.like = async (id) => { await db.collection("posts").doc(id).update({
-        likes: firebase.firestore.FieldValue.arrayUnion(u.uid)
-      }); loadPosts(); };
-    window.toggleComent = id => {
-      const e = document.getElementById(`c-${id}`);
-      e.style.display = (e.style.display === "none") ? "block" : "none";
-    };
-    window.comment = async (id, input) => {
-      const txt = input.value.trim();
-      if (!txt) return;
-      await db.collection("posts").doc(id).update({
-        comments: firebase.firestore.FieldValue.arrayUnion(txt)
-      });
-      loadPosts();
-    };
+  }
+
+  document.getElementById('post-btn').onclick=async()=>{
+    const txt=document.getElementById('new-post').value.trim();
+    const vis=document.getElementById('visibility').value;
+    if(!txt)return;
+    await db.collection('posts').add({
+      uid:u.uid, content:txt, visibility:vis,
+      timestamp:firebase.firestore.FieldValue.serverTimestamp(),
+      likes:[],comments:[]
+    });
+    document.getElementById('new-post').value=''; loadPosts();
+  };
+
+  window.likePost=async id=>{
+    const ref=db.collection('posts').doc(id);
+    await ref.update({likes:firebase.firestore.FieldValue.arrayUnion(u.uid)});
     loadPosts();
-  })();
+  };
+
+  window.toggleComment=id=>{
+    const e=document.getElementById(`c-${id}`);
+    e.style.display=e.style.display==='none'?'block':'none';
+  };
+
+  window.submitComment=async(id,input)=>{
+    const txt=input.value.trim();
+    if(!txt)return;
+    await db.collection('posts').doc(id).update({comments:firebase.firestore.FieldValue.arrayUnion(txt)});
+    loadPosts();
+  };
+
+  window.editPost=async(id,old)=>{
+    const n=prompt('Edit post:',old);
+    if(n!==null)await db.collection('posts').doc(id).update({content:n});
+    loadPosts();
+  };
+
+  loadPosts();
+})();
 </script>
 </body></html>
