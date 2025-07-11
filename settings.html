@@ -1,52 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Settings - Xinn Lab</title>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Settings</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="js/firebase-config.js"></script>
+  <style>button{margin-top:1rem;padding:0.7rem;color:white;background:red;border:none;border-radius:4px;cursor:pointer}</style>
 </head>
 <body>
   <nav>
-    <a href="profile.html">Profile</a> |
-    <a href="search.html">Search</a> |
-    <a href="chat.html">Chat</a> |
-    <a href="settings.html">Settings</a> |
-    <a href="#" id="logout-btn">Logout</a>
+    <a href="profile.html">Profile</a>|
+    <a href="search.html">Search</a>|
+    <a href="chat.html">Chat</a>|
+    <a href="settings.html">Settings</a>|
+    <a href="#" id="logout">Logout</a>
   </nav>
   <h1>Settings</h1>
-  <button id="delete-account-btn" style="color:red;">Delete My Account</button>
-
+  <button id="del">Delete My Account</button>
   <script>
-    const logoutBtn = document.getElementById('logout-btn');
-    logoutBtn.onclick = () => auth.signOut().then(() => window.location.href = 'login.html');
-
-    auth.onAuthStateChanged(user => {
-      if (!user) window.location.href = 'login.html';
-    });
-
-    document.getElementById('delete-account-btn').onclick = async () => {
-      if (!confirm('Are you sure you want to delete your account? This action is irreversible.')) return;
-
-      const user = auth.currentUser;
-      if (!user) return;
-
-      const uid = user.uid;
-
+    document.getElementById('logout').onclick = ()=> auth.signOut().then(()=>location.href='login.html');
+    auth.onAuthStateChanged(u=>{ if(!u) location.href='login.html'; });
+    document.getElementById('del').onclick = async ()=>{
+      if(!confirm('Really delete account?')) return;
+      const u=auth.currentUser;
+      if(!u) return;
       try {
-        // Delete Firestore user data
-        await db.collection('users').doc(uid).delete();
-
-        // Delete auth user
-        await user.delete();
-
-        alert('Account deleted.');
-        window.location.href = 'register.html';
-      } catch (error) {
-        alert('Error deleting account: ' + error.message);
+        await db.collection('users').doc(u.uid).delete();
+        await u.delete();
+        alert('Deleted. Redirecting.');
+        location.href = 'register.html';
+      } catch(ex){
+        alert('Error: '+ex.message);
       }
-    };
+    }
   </script>
 </body>
 </html>
