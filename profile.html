@@ -1,57 +1,114 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Profile & Friends - Xinn Lab</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; }
-    .avatar { width: 80px; height: 80px; border-radius: 50%; }
-    button { margin-left: 5px; }
-    ul { list-style-type: none; padding-left: 0; }
-    li { margin-bottom: 8px; }
-    .friend-item { display: flex; align-items: center; gap: 10px; }
-    .friend-avatar { width: 40px; height: 40px; border-radius: 50%; }
-    .nav { margin-bottom: 20px; }
-    .nav a { margin-right: 10px; text-decoration: none; }
-  </style>
+  <title>Profile - Xinn Lab</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
 </head>
 <body>
-  <div class="nav">
-    <a href="profile.html">Profile</a>
-    <a href="chat.html">Chat</a>
-    <a href="login.html" id="logout-btn">Logout</a>
-  </div>
-
-  <h1>Your Profile</h1>
-  <img id="profile-avatar" class="avatar" src="" alt="Avatar" />
-  <h2 id="profile-username"></h2>
-  <p id="profile-bio"></p>
-
-  <hr />
-
-  <h3>Your Friends</h3>
-  <ul id="friend-list"></ul>
-
+  <nav>
+    <a href="profile.html">Profile</a> |
+    <a href="search.html">Search</a> |
+    <a href="chat.html">Chat</a> |
+    <a href="settings.html">Settings</a> |
+    <a href="#" id="logout-btn">Logout</a>
+  </nav>
+  <h1>Profile</h1>
+  <div id="profile-info"></div>
   <h3>Friend Requests</h3>
-  <ul id="friend-requests-list"></ul>
+  <div id="friend-requests"></div>
+  <h3>Friends</h3>
+  <div id="friends-list"></div>
 
-  <h3>Add Friend</h3>
-  <input type="text" id="add-friend-username" placeholder="Enter username" />
-  <button id="send-friend-request-btn">Send Friend Request</button>
+  <script>
+    const profileInfo = document.getElementById('profile-info');
+    const friendRequestsDiv = document.getElementById('friend-requests');
+    const friendsListDiv = document.getElementById('friends-list');
+    const logoutBtn = document.getElementById('logout-btn');
 
-  <script src="js/profile.js"></script>
+    logoutBtn.onclick = () => auth.signOut().then(() => window.location.href = 'login.html');
 
+    auth.onAuthStateChanged(async user => {
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+      const doc = await db.collection('users').doc(user.uid).get();
+      if (!doc.exists) {
+        profileInfo.textContent = 'User profile not found.';
+        return;
+      }
 
-<div id="navbar"></div>
+      const userData = doc.data();
+      profileInfo.innerHTML = `<p><strong>Username:</strong> ${userData.username}</p>
+                               <p><strong>Email:</strong> ${userData.email}</p>
+                               <p><strong>Bio:</strong> ${userData.bio || '(empty)'}</p>`;
 
-<script>
-  fetch("components/navbar.html")
-    .then(res => res.text())
-    .then(html => {
-      document.getElementById("navbar").innerHTML = html;
+      // Friend requests UI
+      friendRequestsDiv.innerHTML = '';
+      for (const requesterId of userData.friendRequestsReceived) {
+        const reqDoc = await db.collection('users').doc(requesterId).get();
+        if (!reqDoc.exists) continue;
+        const requester = reqDoc.data();
+
+        const reqElem = document.createElement('div');
+        reqElem.textContent = requester.username;
+        const acceptBtn = document.createElement('button');
+        acceptBtn.textContent = 'Accept';
+        acceptBtn.onclick = () => respondToRequest(user.uid, requesterId, true);
+
+        const declineBtn = document.createElement('button');
+        declineBtn.textContent = 'Decline';
+        declineBtn.onclick = () => respondToRequest(user.uid, requesterId, false);
+
+        reqElem.appendChild(acceptBtn);
+        reqElem.appendChild(declineBtn);
+        friendRequestsDiv.appendChild(reqElem);
+      }
+
+      // Friends list UI
+      friendsListDiv.innerHTML = '';
+      for (const friendId of userData.friends) {
+        const friendDoc = await db.collection('users').doc(friendId).get();
+        if (!friendDoc.exists) continue;
+        const friend = friendDoc.data();
+        const friendElem = document.createElement('div');
+        friendElem.textContent = friend.username;
+        friendsListDiv.appendChild(friendElem);
+      }
     });
-</script>
-<script src="js/auth.js"></script>
 
+    async function respondToRequest(currentUid, requesterUid, accept) {
+      const currentUserRef = db.collection('users').doc(currentUid);
+      const requesterRef = db.collection('users').doc(requesterUid);
+
+      await db.runTransaction(async (transaction) => {
+        const currentUserDoc = await transaction.get(currentUserRef);
+        const requesterDoc = await transaction.get(requesterRef);
+
+        if (!currentUserDoc.exists || !requesterDoc.exists) return;
+
+        let currentData = currentUserDoc.data();
+        let requesterData = requesterDoc.data();
+
+        // Remove request
+        currentData.friendRequestsReceived = currentData.friendRequestsReceived.filter(id => id !== requesterUid);
+        requesterData.friendRequestsSent = requesterData.friendRequestsSent.filter(id => id !== currentUid);
+
+        if (accept) {
+          currentData.friends.push(requesterUid);
+          requesterData.friends.push(currentUid);
+        }
+
+        transaction.update(currentUserRef, currentData);
+        transaction.update(requesterRef, requesterData);
+      });
+
+      alert(accept ? 'Friend request accepted' : 'Friend request declined');
+      location.reload();
+    }
+  </script>
 </body>
 </html>
