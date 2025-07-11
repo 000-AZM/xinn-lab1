@@ -14,8 +14,8 @@ function createPost() {
   post.innerHTML = `
     <div class="post-header">
       <img src="https://i.pravatar.cc/50?u=koaung" class="avatar-sm" />
-      <div>
-        <strong>Ko Aung</strong><br/>
+      <div class="post-user-info">
+        <strong>Ko Aung</strong><br />
         <small>${time} • ${visibility}</small>
       </div>
       <button class="edit-btn" onclick="editPost(this)">✏️</button>
@@ -24,10 +24,10 @@ function createPost() {
     <div class="post-actions">
       <span onclick="likePost(this)">❤️ <span class="like-count">0</span></span>
       <span onclick="toggleComment(this)">💬 Comment</span>
-      <span onclick="sharePost('${content}')">📤 Share</span>
+      <span onclick="sharePost('${content.replace(/'/g, "\\'")}')">📤 Share</span>
     </div>
     <div class="comment-box" style="display:none;">
-      <input type="text" placeholder="Write a comment..." style="width:100%; padding:6px; margin-top:6px; border-radius:6px;" />
+      <input type="text" placeholder="Write a comment..." />
     </div>
   `;
 
@@ -69,7 +69,7 @@ function editPost(btn) {
 
 function showTab(tab) {
   const tabs = ["feed", "profile", "settings"];
-  tabs.forEach(t => {
+  tabs.forEach((t) => {
     document.getElementById(`${t}-tab`).classList.add("hidden");
     document.querySelector(`.nav-item:nth-child(${tabs.indexOf(t) + 1})`).classList.remove("active");
   });
