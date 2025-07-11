@@ -1,3 +1,53 @@
+// Replace these with your desired username/password
+const VALID_USERNAME = "koaung";
+const VALID_PASSWORD = "123456";
+
+window.onload = () => {
+  checkLogin();
+};
+
+function checkLogin() {
+  const loggedIn = localStorage.getItem("loggedIn");
+  if (loggedIn === "true") {
+    showApp();
+  } else {
+    showLogin();
+  }
+}
+
+function login() {
+  const usernameInput = document.getElementById("username").value.trim();
+  const passwordInput = document.getElementById("password").value;
+
+  const errorMsg = document.getElementById("login-error");
+  errorMsg.innerText = "";
+
+  if (usernameInput === VALID_USERNAME && passwordInput === VALID_PASSWORD) {
+    localStorage.setItem("loggedIn", "true");
+    showApp();
+  } else {
+    errorMsg.innerText = "Invalid username or password!";
+  }
+}
+
+function logout() {
+  localStorage.removeItem("loggedIn");
+  showLogin();
+}
+
+function showLogin() {
+  document.getElementById("login-page").classList.remove("hidden");
+  document.getElementById("app").classList.add("hidden");
+}
+
+function showApp() {
+  document.getElementById("login-page").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  showTab("feed"); // default to feed tab
+}
+
+/* -- Existing functions -- */
+
 function createPost() {
   const textarea = document.querySelector("textarea");
   const feed = document.getElementById("feed");
@@ -20,11 +70,11 @@ function createPost() {
       </div>
       <button class="edit-btn" onclick="editPost(this)">✏️</button>
     </div>
-    <div class="post-text">${content}</div>
+    <div class="post-text">${escapeHtml(content)}</div>
     <div class="post-actions">
       <span onclick="likePost(this)">❤️ <span class="like-count">0</span></span>
       <span onclick="toggleComment(this)">💬 Comment</span>
-      <span onclick="sharePost('${content.replace(/'/g, "\\'")}')">📤 Share</span>
+      <span onclick="sharePost('${content.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')">📤 Share</span>
     </div>
     <div class="comment-box" style="display:none;">
       <input type="text" placeholder="Write a comment..." />
@@ -79,4 +129,18 @@ function showTab(tab) {
 
 function toggleDarkMode() {
   document.body.classList.toggle("dark");
+}
+
+// Simple function to prevent HTML injection in posts
+function escapeHtml(text) {
+  const map = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  };
+  return text.replace(/[&<>"']/g, function (m) {
+    return map[m];
+  });
 }
